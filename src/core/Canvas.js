@@ -179,6 +179,39 @@ export class Canvas {
       if (this.isMarquee) {
         this.isMarquee = false;
         this.marquee.style.display = 'none';
+        
+        const minX = Math.min(this.marqueeStart.world.x, currentWorld.x);
+        const minY = Math.min(this.marqueeStart.world.y, currentWorld.y);
+        const maxX = Math.max(this.marqueeStart.world.x, currentWorld.x);
+        const maxY = Math.max(this.marqueeStart.world.y, currentWorld.y);
+
+        let first = true;
+        this.state.nodes.forEach(node => {
+          const nodeWidth = 240; // rough max width of nodes
+          const nodeHeight = 120; // rough max height
+          if (node.x < maxX && (node.x + nodeWidth) > minX && 
+              node.y < maxY && (node.y + nodeHeight) > minY) {
+            this.state.selectNode(node.id, !first);
+            first = false;
+          }
+        });
+        
+        // Also check sticky notes
+        this.state.notes.forEach(note => {
+          const noteW = note.width || 200;
+          const noteH = note.height || 200;
+          if (note.x < maxX && (note.x + noteW) > minX && 
+              note.y < maxY && (note.y + noteH) > minY) {
+            if (first) {
+               this.state.selectNote(note.id);
+               first = false;
+            }
+          }
+        });
+        
+        if (first) {
+          this.state.clearSelection();
+        }
       }
     });
 

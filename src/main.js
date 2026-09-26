@@ -119,6 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-project-selector')?.addEventListener('click', () => {
     dashboard.open();
   });
+  
+  document.getElementById('btn-go-home')?.addEventListener('click', () => {
+    dashboard.open();
+  });
+
+  document.getElementById('btn-settings')?.addEventListener('click', () => {
+    alert('설정 기능은 현재 준비 중입니다.');
+  });
+
+  document.getElementById('bg-color-picker')?.addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--bg-canvas', e.target.value);
+  });
   document.getElementById('btn-close-inspector')?.addEventListener('click', () => {
     appInspector.style.display = appInspector.style.display === 'none' ? 'flex' : 'none';
   });

@@ -135,15 +135,15 @@
 
 .edge-label-text {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  fill: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--text-primary);
   text-anchor: middle;
   dominant-baseline: central;
 }
 
 .edge-label-group:hover .edge-label-text {
-  fill: var(--text-primary);
+  fill: var(--primary);
 }
 
 /* Temporary connection wire while dragging */

@@ -357,3 +357,78 @@
 .node-quick-add.add-bottom:hover {
   transform: translateX(-50%) scale(1.25);
 }
+
+/* Custom Backgrounds for Manual Operation & Document (Auditing/Accounting Flowchart) */
+.workflow-node.type-manual,
+.workflow-node.type-document {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.workflow-node.type-manual:hover,
+.workflow-node.type-document:hover {
+  border: none;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.workflow-node.type-manual.selected,
+.workflow-node.type-document.selected {
+  border: none;
+  box-shadow: none;
+}
+
+.workflow-node.type-manual.selected .node-shape-bg,
+.workflow-node.type-document.selected .node-shape-bg {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 2px var(--primary), 0 0 24px var(--primary-glow), var(--shadow-lg);
+}
+
+.node-shape-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--node-bg-default);
+  /* Use a background gradient similar to other nodes but we rely on standard bg for now */
+  border: 1px solid var(--border-medium);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-card);
+  backdrop-filter: var(--backdrop-blur);
+  z-index: 0;
+  transition: box-shadow var(--transition-normal);
+}
+
+/* Inverted Trapezoid for Manual Operation */
+.node-shape-bg.type-manual {
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+  border-radius: 0;
+  border: none;
+  filter: drop-shadow(0 0 1px var(--border-medium));
+}
+
+/* Wavy bottom (simplified with angled cut) for Document */
+.node-shape-bg.type-document {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 75% 100%, 50% 85%, 25% 100%, 0 85%);
+  border-radius: 0;
+  border: none;
+  filter: drop-shadow(0 0 1px var(--border-medium));
+}
+
+/* Adjust port positions for clipped shapes */
+.workflow-node.type-manual .node-port-bottom {
+  bottom: 0px; 
+}
+.workflow-node.type-document .node-port-bottom {
+  bottom: 12%; 
+}
+
+/* Prevent text spilling over the clipped edges */
+.workflow-node.type-manual .node-content {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.workflow-node.type-document .node-content {
+  padding-bottom: 20px;
+}

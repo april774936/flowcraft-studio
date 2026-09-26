@@ -404,14 +404,40 @@ export class Toolbar {
       if (e.target === helpModal) helpModal.classList.remove('active');
     });
 
-    // Theme toggle
-    document.getElementById('btn-theme-toggle')?.addEventListener('click', () => {
-      const html = document.documentElement;
-      const current = html.getAttribute('data-theme') || 'dark';
-      const next = current === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', next);
-      document.getElementById('theme-icon').innerHTML = next === 'dark' ? Icons.sun : Icons.moon;
-      soundFx.playPop();
+    // Theme Dropdown Toggle
+    const themeDropdown = document.getElementById('theme-dropdown');
+    document.getElementById('btn-theme-toggle')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      themeDropdown?.classList.toggle('active');
+    });
+
+    // Close theme dropdown when clicking outside
+    window.addEventListener('click', () => {
+      themeDropdown?.classList.remove('active');
+    });
+
+    // Theme Selection
+    document.querySelectorAll('#theme-menu .dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const theme = e.currentTarget.getAttribute('data-theme-value');
+        if (theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.removeProperty('--bg-canvas');
+          
+          let icon = Icons.sun; 
+          if (theme === 'dark' || theme === 'black') {
+            icon = Icons.moon; 
+          }
+          
+          const themeIcon = document.getElementById('theme-icon');
+          if (themeIcon) {
+            themeIcon.innerHTML = icon;
+          }
+          
+          themeDropdown?.classList.remove('active');
+          if (window.soundFx) window.soundFx.playPop();
+        }
+      });
     });
 
     // Simulator drawer close & clear logs

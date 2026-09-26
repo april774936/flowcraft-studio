@@ -164,16 +164,34 @@ export class HomeDashboard {
         </div>
         
         <div class="dash-card-actions">
+          <button class="dash-card-del-btn" title="삭제" style="color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px;">🗑️</button>
           <button class="dash-card-menu-btn" title="옵션 메뉴">⋮</button>
         </div>
       `;
 
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.dash-card-menu-btn')) return;
+        if (e.target.closest('.dash-card-menu-btn') || e.target.closest('.dash-card-del-btn')) return;
         this.pm.switchProject(proj.id);
         this.state.loadActiveProject();
         this.close(); // Go to canvas
       });
+
+      // Delete Action
+      const delBtn = card.querySelector('.dash-card-del-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm(`'${proj.name}' 프로젝트를 삭제하시겠습니까?`)) {
+            const wasActive = this.pm.getActiveProject()?.id === proj.id;
+            this.pm.deleteProject(proj.id);
+            if (wasActive) {
+              this.state.loadActiveProject();
+            }
+            this.renderRecents();
+            this.renderTrash();
+          }
+        });
+      }
 
       // Context Menu Action
       card.querySelector('.dash-card-menu-btn').addEventListener('click', (e) => {

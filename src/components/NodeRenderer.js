@@ -68,7 +68,42 @@ export class NodeRenderer {
           <div class="node-quick-add add-bottom" data-direction="bottom" title="No 분기 다음 단계 추가">+</div>
         `;
       } 
-      // 3. Process / Task Node Shape (Standard Rectangle)
+      } 
+      // 3. Special Shapes (Manual Operation & Document)
+      else if (node.type === 'manual' || node.type === 'document') {
+        el.innerHTML = `
+          <div class="node-shape-bg type-${node.type}"></div>
+          <div class="node-accent-bar" style="background-color: ${accentColor}; z-index: 2; position: relative;"></div>
+          <div class="node-content" style="position: relative; z-index: 2;">
+            <div class="node-header">
+              <div class="node-icon-box" style="color: ${accentColor};">
+                ${getIcon(node.icon, node.type)}
+              </div>
+              <div class="node-title-container">
+                <div class="node-title" contenteditable="true" title="더블 클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
+              </div>
+            </div>
+            ${node.desc ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
+            ${node.memo ? `<div class="node-memo-badge" style="font-size: 10px; color: var(--text-secondary); margin-top: 6px; padding: 4px 6px; background: var(--bg-surface-active); border-radius: 4px; border-left: 2px solid ${accentColor}; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote} ${this.escapeHtml(node.memo)}</div>` : ''}
+            <div class="node-footer">
+              <span class="node-type-badge">${node.type}</span>
+              <div class="node-status-indicator">
+                <span class="status-dot"></span>
+                <span>${this.getStatusLabel(node.status)}</span>
+              </div>
+            </div>
+          </div>
+          <!-- Connection Ports -->
+          <div class="node-port node-port-top" data-port="top" title="위쪽 포트"></div>
+          <div class="node-port node-port-right" data-port="right" title="오른쪽 포트"></div>
+          <div class="node-port node-port-bottom" data-port="bottom" title="아래쪽 포트"></div>
+          <div class="node-port node-port-left" data-port="left" title="왼쪽 포트"></div>
+          <!-- Quick Add Buttons -->
+          <div class="node-quick-add add-right" data-direction="right" title="우측에 다음 단계 추가">+</div>
+          <div class="node-quick-add add-bottom" data-direction="bottom" title="하단에 다음 단계 추가">+</div>
+        `;
+      }
+      // 4. Process / Task Node Shape (Standard Rectangle)
       else {
         el.innerHTML = `
           <div class="node-accent-bar" style="background-color: ${accentColor};"></div>
@@ -82,6 +117,7 @@ export class NodeRenderer {
               </div>
             </div>
             ${node.desc ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
+            ${node.memo ? `<div class="node-memo-badge" style="font-size: 10px; color: var(--text-secondary); margin-top: 6px; padding: 4px 6px; background: var(--bg-surface-active); border-radius: 4px; border-left: 2px solid ${accentColor}; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote} ${this.escapeHtml(node.memo)}</div>` : ''}
             <div class="node-footer">
               <span class="node-type-badge">${node.type}</span>
               <div class="node-status-indicator">
@@ -90,13 +126,11 @@ export class NodeRenderer {
               </div>
             </div>
           </div>
-
           <!-- Connection Ports -->
           <div class="node-port node-port-top" data-port="top" title="위쪽 포트"></div>
           <div class="node-port node-port-right" data-port="right" title="오른쪽 포트"></div>
           <div class="node-port node-port-bottom" data-port="bottom" title="아래쪽 포트"></div>
           <div class="node-port node-port-left" data-port="left" title="왼쪽 포트"></div>
-
           <!-- Quick Add Buttons -->
           <div class="node-quick-add add-right" data-direction="right" title="우측에 다음 단계 추가">+</div>
           <div class="node-quick-add add-bottom" data-direction="bottom" title="하단에 다음 단계 추가">+</div>

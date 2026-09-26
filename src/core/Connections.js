@@ -207,12 +207,12 @@ export class Connections {
         const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         labelGroup.setAttribute('class', 'edge-label-group');
 
-        const labelWidth = Math.max(54, edge.label.length * 9.5 + 18);
+        const labelWidth = Math.max(64, edge.label.length * 11 + 24);
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', midX - labelWidth / 2);
-        rect.setAttribute('y', midY - 11);
+        rect.setAttribute('y', midY - 14);
         rect.setAttribute('width', labelWidth);
-        rect.setAttribute('height', 22);
+        rect.setAttribute('height', 28);
         rect.setAttribute('class', 'edge-label-bg');
 
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');

@@ -1,43 +1,43 @@
 :root {
-  /* Ultra-Premium Dark Theme (Linear / Raycast / Figma inspired) */
-  --bg-dark: #07090e;
-  --bg-canvas: #090d16;
-  --bg-surface: #0e131f;
-  --bg-surface-elevated: #141c2e;
-  --bg-surface-hover: #1b263e;
-  --bg-surface-active: #22304f;
+  /* Lighter Dark Theme */
+  --bg-dark: #0f172a;
+  --bg-canvas: #1e293b;
+  --bg-surface: #334155;
+  --bg-surface-elevated: #475569;
+  --bg-surface-hover: #64748b;
+  --bg-surface-active: #94a3b8;
   
-  --bg-glass: rgba(14, 19, 31, 0.78);
-  --bg-glass-card: rgba(20, 28, 46, 0.65);
-  --bg-glass-floating: rgba(14, 19, 31, 0.85);
+  --bg-glass: rgba(30, 41, 59, 0.78);
+  --bg-glass-card: rgba(51, 65, 85, 0.65);
+  --bg-glass-floating: rgba(30, 41, 59, 0.85);
 
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.22);
-  --border-active: #6366f1;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.2);
+  --border-strong: rgba(255, 255, 255, 0.3);
+  --border-active: #818cf8;
 
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-inverse: #07090e;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
 
   /* Brand Accents */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #818cf8;
-  --primary-glow: rgba(99, 102, 241, 0.4);
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-light: #a5b4fc;
+  --primary-glow: rgba(129, 140, 248, 0.4);
 
   /* AI Special Theme */
-  --ai-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 45%, #06b6d4 100%);
-  --ai-gradient-hover: linear-gradient(135deg, #b86bfc 0%, #7579f4 45%, #22d3ee 100%);
-  --ai-glow: rgba(168, 85, 247, 0.45);
+  --ai-gradient: linear-gradient(135deg, #c084fc 0%, #818cf8 45%, #22d3ee 100%);
+  --ai-gradient-hover: linear-gradient(135deg, #d8b4fe 0%, #a5b4fc 45%, #67e8f9 100%);
+  --ai-glow: rgba(192, 132, 252, 0.45);
 
   /* Categorized Node Colors */
-  --node-bg-default: linear-gradient(180deg, rgba(20, 27, 43, 0.85) 0%, rgba(11, 15, 25, 0.95) 100%);
-  --node-bg-pill: linear-gradient(135deg, rgba(20, 27, 43, 0.9) 0%, rgba(14, 19, 31, 0.95) 100%);
-  --node-bg-diamond: linear-gradient(135deg, rgba(34, 25, 60, 0.9) 0%, rgba(18, 14, 36, 0.95) 100%);
+  --node-bg-default: linear-gradient(180deg, rgba(51, 65, 85, 0.85) 0%, rgba(30, 41, 59, 0.95) 100%);
+  --node-bg-pill: linear-gradient(135deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+  --node-bg-diamond: linear-gradient(135deg, rgba(76, 29, 149, 0.9) 0%, rgba(46, 16, 101, 0.95) 100%);
   
-  --node-port-bg: #0f172a;
+  --node-port-bg: #1e293b;
 
   --node-trigger: #f59e0b;
   --node-trigger-bg: rgba(245, 158, 11, 0.15);
@@ -135,4 +135,43 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* 1. Black Theme (블랙 테마) - Ultra-Premium Pitch Black */
+[data-theme="black"] {
+  --bg-dark: #07090e;
+  --bg-canvas: #090d16;
+  --bg-surface: #0e131f;
+  --bg-surface-elevated: #141c2e;
+  --bg-surface-hover: #1b263e;
+  --bg-surface-active: #22304f;
+  
+  --bg-glass: rgba(14, 19, 31, 0.78);
+  --bg-glass-card: rgba(20, 28, 46, 0.65);
+  --bg-glass-floating: rgba(14, 19, 31, 0.85);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --border-active: #6366f1;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #07090e;
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: #818cf8;
+  --primary-glow: rgba(99, 102, 241, 0.4);
+
+  --ai-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 45%, #06b6d4 100%);
+  --ai-gradient-hover: linear-gradient(135deg, #b86bfc 0%, #7579f4 45%, #22d3ee 100%);
+  --ai-glow: rgba(168, 85, 247, 0.45);
+
+  --node-bg-default: linear-gradient(180deg, rgba(20, 27, 43, 0.85) 0%, rgba(11, 15, 25, 0.95) 100%);
+  --node-bg-pill: linear-gradient(135deg, rgba(20, 27, 43, 0.9) 0%, rgba(14, 19, 31, 0.95) 100%);
+  --node-bg-diamond: linear-gradient(135deg, rgba(34, 25, 60, 0.9) 0%, rgba(18, 14, 36, 0.95) 100%);
+  
+  --node-port-bg: #07090e;
 }

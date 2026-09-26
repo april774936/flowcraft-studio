@@ -138,6 +138,35 @@ export const NodeLibrary = [
         color: '#facc15'
       }
     ]
+  },
+  {
+    category: '보안 및 감사 (Auditing)',
+    items: [
+      {
+        type: 'manual',
+        category: 'manual',
+        title: '수동 작업 (Manual Operation)',
+        desc: '수기 기록, 육안 검토 등 사람의 작업',
+        icon: 'edit',
+        color: '#10b981' // Greenish as in the image
+      },
+      {
+        type: 'document',
+        category: 'document',
+        title: '문서 (Document)',
+        desc: '출력물, 기록 문서, 보고서',
+        icon: 'fileText',
+        color: '#f59e0b' // Yellowish/Orange
+      },
+      {
+        type: 'action',
+        category: 'action',
+        title: '시스템 처리 (Process)',
+        desc: '전산 처리 및 계산',
+        icon: 'settings',
+        color: '#f59e0b' // Red/Orange for system processes in their diagram
+      }
+    ]
   }
 ];
 
