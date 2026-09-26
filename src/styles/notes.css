@@ -1,0 +1,188 @@
+/* Canvas Sticky Notes - Tactile Paper & Modern Pastel Styling */
+.canvas-note {
+  position: absolute;
+  min-width: 190px;
+  min-height: 140px;
+  max-width: 480px;
+  border-radius: var(--border-radius-sm);
+  padding: 14px 14px 12px 14px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+  z-index: 15;
+  transition: box-shadow var(--transition-normal), transform var(--transition-fast);
+  border: 1px solid transparent;
+  transform: rotate(-0.5deg);
+}
+
+.canvas-note:hover {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 0 16px 32px -6px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.canvas-note:active {
+  cursor: grabbing;
+}
+
+.canvas-note.selected {
+  box-shadow: 0 0 0 2px var(--primary-light), 0 16px 36px -4px rgba(0, 0, 0, 0.6);
+  z-index: 28;
+  transform: rotate(0deg);
+}
+
+/* Semi-transparent Washi Tape strip on top center */
+.canvas-note::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%) rotate(1deg);
+  width: 50px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(2px);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 1px;
+}
+
+/* Color Variants */
+.canvas-note.color-yellow {
+  background: var(--note-yellow);
+  color: var(--note-yellow-text);
+  border-color: var(--note-yellow-border);
+}
+
+.canvas-note.color-green {
+  background: var(--note-green);
+  color: var(--note-green-text);
+  border-color: var(--note-green-border);
+}
+
+.canvas-note.color-blue {
+  background: var(--note-blue);
+  color: var(--note-blue-text);
+  border-color: var(--note-blue-border);
+}
+
+.canvas-note.color-pink {
+  background: var(--note-pink);
+  color: var(--note-pink-text);
+  border-color: var(--note-pink-border);
+}
+
+.canvas-note.color-purple {
+  background: var(--note-purple);
+  color: var(--note-purple-text);
+  border-color: var(--note-purple-border);
+}
+
+/* Note Header */
+.note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+.note-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.note-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.color-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.color-dot:hover {
+  transform: scale(1.35);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.color-dot.yellow { background: #facc15; }
+.color-dot.green { background: #4ade80; }
+.color-dot.blue { background: #38bdf8; }
+.color-dot.pink { background: #f472b6; }
+.color-dot.purple { background: #c084fc; }
+
+.note-delete-btn {
+  background: none;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  border-radius: 4px;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.note-delete-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Note Content Area */
+.note-body {
+  flex: 1;
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.55;
+  color: inherit;
+  outline: none;
+  word-break: break-word;
+  white-space: pre-wrap;
+  cursor: text;
+  font-family: inherit;
+}
+
+.note-body[placeholder]:empty:before {
+  content: attr(placeholder);
+  opacity: 0.45;
+}
+
+/* Bottom-right Resize Handle with fold effect */
+.note-resize-handle {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  opacity: 0.4;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  transition: opacity var(--transition-fast);
+}
+
+.note-resize-handle::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.canvas-note:hover .note-resize-handle {
+  opacity: 0.8;
+}

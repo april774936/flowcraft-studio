@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowCraft Studio - 지능형 워크플로우 빌더 & 시뮬레이터</title>
+  <meta name="description" content="AI 기반 워크플로우 초안 생성, 프로젝트별 다이어그램 관리, 캔버스 스티키 메모, SVG 스마트 연결선 및 시뮬레이션 지원 전문 워크플로우 에디터" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><rect width='8' height='8' x='3' y='3' rx='2'/><path d='M7 11v4a2 2 0 0 0 2 2h4'/><rect width='8' height='8' x='13' y='13' rx='2'/></svg>" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/src/styles/variables.css" />
+  <link rel="stylesheet" href="/src/styles/base.css" />
+  <link rel="stylesheet" href="/src/styles/toolbar.css" />
+  <link rel="stylesheet" href="/src/styles/sidebar.css" />
+  <link rel="stylesheet" href="/src/styles/canvas.css" />
+  <link rel="stylesheet" href="/src/styles/nodes.css" />
+  <link rel="stylesheet" href="/src/styles/notes.css" />
+  <link rel="stylesheet" href="/src/styles/inspector.css" />
+  <link rel="stylesheet" href="/src/styles/home-dashboard.css" />
+  <link rel="stylesheet" href="/src/styles/ai-modal.css" />
+  <link rel="stylesheet" href="/src/styles/simulator.css" />
+</head>
+<body>
+  <!-- Home Dashboard Overlay -->
+  <div class="home-dashboard-overlay" id="home-dashboard"></div>
+
+  <div id="app">
+    <!-- Top Header & Toolbar -->
+    <header class="app-header" id="app-header">
+      <!-- Left: Logo & Project Switcher -->
+      <div class="header-left">
+        <div class="logo-area">
+          <div class="logo-icon" id="logo-icon"></div>
+          <span>FlowCraft</span>
+        </div>
+        <div class="header-divider"></div>
+        <!-- Project Selector Trigger -->
+        <button class="project-selector-btn" id="btn-project-selector" title="프로젝트 전환 및 관리">
+          <span class="project-icon-wrapper" id="project-icon-wrapper"></span>
+          <span class="project-name-display" id="header-project-name">기본 프로젝트</span>
+          <span class="badge-project">Project</span>
+          <span class="chevron-wrapper" id="project-chevron-wrapper"></span>
+        </button>
+      </div>
+
+      <!-- Center: Key Actions (AI Draft, AI Copilot, Add Note, Run Simulator, Auto Layout) -->
+      <div class="header-center">
+        <!-- AI Draft Generator Pill -->
+        <button class="btn-ai" id="btn-ai-draft" title="AI에게 워크플로우 초안을 자동으로 만들게 합니다">
+          <span id="ai-btn-icon"></span>
+          <span>AI 초안 만들기</span>
+        </button>
+
+        <!-- AI Copilot Dropdown -->
+        <div class="dropdown" id="ai-copilot-dropdown">
+          <button class="btn-secondary" id="btn-ai-copilot-toggle" title="AI 워크플로우 조작 및 추천" style="border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
+            <span id="ai-copilot-icon"></span>
+            <span>AI 조작</span>
+            <span id="ai-copilot-chevron"></span>
+          </button>
+          <div class="dropdown-menu" id="ai-copilot-menu" style="min-width: 220px;">
+            <div class="dropdown-item" id="ai-action-next">
+              <span id="icon-ai-next"></span> 선택 노드 다음 단계 추천
+            </div>
+            <div class="dropdown-item" id="ai-action-error">
+              <span id="icon-ai-error"></span> 에러 처리 분기 자동 삽입
+            </div>
+            <div class="dropdown-item" id="ai-action-notif">
+              <span id="icon-ai-notif"></span> Slack/메신저 알림 단계 추가
+            </div>
+            <div class="dropdown-item" id="ai-action-audit">
+              <span id="icon-ai-audit"></span> 워크플로우 진단 리포트
+            </div>
+          </div>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <div class="action-pill-group">
+          <!-- Add Sticky Note Button -->
+          <button class="btn-secondary" id="btn-add-note" title="캔버스에 스티키 메모 추가">
+            <span id="note-btn-icon"></span>
+            <span>메모 추가</span>
+          </button>
+
+          <!-- Auto Layout DAG -->
+          <button class="btn-secondary" id="btn-auto-layout" title="노드들을 위계에 맞춰 깔끔하게 자동 정렬합니다">
+            <span id="layout-btn-icon"></span>
+            <span>자동 정렬</span>
+          </button>
+
+          <!-- Run / Simulate Workflow -->
+          <button class="btn-simulate" id="btn-run-simulation" title="워크플로우 실행 과정을 시각적으로 시뮬레이션합니다">
+            <span id="run-btn-icon"></span>
+            <span id="run-btn-text">실행 시뮬레이션</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Undo/Redo, Zoom, Export, Theme Toggle -->
+      <div class="header-right">
+        <!-- Undo / Redo -->
+        <div class="action-pill-group">
+          <button class="btn-icon" id="btn-undo" title="실행 취소 (Ctrl/Cmd + Z)">
+            <span id="undo-icon"></span>
+          </button>
+          <button class="btn-icon" id="btn-redo" title="다시 실행 (Ctrl/Cmd + Y)">
+            <span id="redo-icon"></span>
+          </button>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+          <button class="btn-icon" id="btn-zoom-out" title="축소">
+            <span id="zoom-out-icon"></span>
+          </button>
+          <span class="zoom-level-text" id="zoom-level-label">100%</span>
+          <button class="btn-icon" id="btn-zoom-in" title="확대">
+            <span id="zoom-in-icon"></span>
+          </button>
+          <button class="btn-icon" id="btn-zoom-fit" title="화면에 맞추기">
+            <span id="zoom-fit-icon"></span>
+          </button>
+        </div>
+
+        <!-- Export Dropdown -->
+        <div class="dropdown" id="export-dropdown">
+          <button class="btn-secondary" id="btn-export-toggle">
+            <span id="export-icon"></span>
+            <span>내보내기</span>
+            <span id="export-chevron"></span>
+          </button>
+          <div class="dropdown-menu" id="export-menu">
+            <div class="dropdown-item" id="export-png">
+              <span id="export-png-icon"></span> PNG 이미지로 저장
+            </div>
+            <div class="dropdown-item" id="export-svg">
+              <span id="export-svg-icon"></span> SVG 벡터로 저장
+            </div>
+            <div class="dropdown-item" id="export-json">
+              <span id="export-json-icon"></span> 프로젝트 JSON 다운로드
+            </div>
+            <div class="dropdown-item" id="import-json-trigger">
+              <span id="import-json-icon"></span> JSON 파일 불러오기
+            </div>
+          </div>
+          <input type="file" id="json-file-input" accept=".json" style="display:none;" />
+        </div>
+
+        <!-- Sound Effects Toggle -->
+        <button class="btn-icon" id="btn-sound-toggle" title="효과음 켜기/끄기">
+          <span id="sound-icon"></span>
+        </button>
+
+        <!-- Keyboard Help -->
+        <button class="btn-icon" id="btn-help-toggle" title="단축키 및 조작 도움말">
+          <span id="help-icon"></span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="btn-icon" id="btn-theme-toggle" title="다크/라이트 테마 전환">
+          <span id="theme-icon"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Body -->
+    <main class="app-body">
+      <!-- Left Sidebar: Node Palette & Templates -->
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-tabs">
+          <div class="sidebar-tab active" data-tab="palette" id="tab-palette">노드 라이브러리</div>
+          <div class="sidebar-tab" data-tab="templates" id="tab-templates">템플릿 프리셋</div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="sidebar-search">
+          <span class="search-icon" id="search-icon-box"></span>
+          <input type="text" id="palette-search-input" placeholder="노드 검색 (트리거, API, 조건...)" />
+        </div>
+
+        <!-- Sidebar Content: Palette or Templates -->
+        <div class="sidebar-content" id="sidebar-content-area">
+          <!-- Dynamically populated by Palette.js -->
+        </div>
+      </aside>
+
+      <!-- Sidebar Collapse Toggle Button -->
+      <button class="sidebar-collapse-toggle" id="btn-toggle-sidebar" title="사이드바 접기/펼치기">◀</button>
+
+      <!-- Center: Infinite Interactive Canvas -->
+      <section class="canvas-container" id="canvas-container">
+        <!-- Dynamic Background Grid -->
+        <div class="canvas-grid" id="canvas-grid"></div>
+
+        <!-- Transformable World Layer (Scales & Pans) -->
+        <div class="canvas-world" id="canvas-world">
+          <!-- SVG Connections Layer -->
+          <svg class="connections-layer" id="connections-svg">
+            <defs>
+              <!-- Arrowhead Markers for SVG Edges -->
+              <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#60a5fa" class="edge-arrow" />
+              </marker>
+              <marker id="arrowhead-selected" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#a78bfa" />
+              </marker>
+              <marker id="arrowhead-yes" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+              </marker>
+              <marker id="arrowhead-no" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+              </marker>
+              <marker id="arrowhead-running" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#06b6d4" />
+              </marker>
+            </defs>
+            <!-- SVG Paths rendered here -->
+            <g id="edges-group"></g>
+            <!-- Running Simulation Token Group -->
+            <g id="tokens-group"></g>
+            <!-- Dynamic Temporary Wire while dragging -->
+            <path id="temp-connection" class="temp-connection-path" d="" style="display:none;" />
+          </svg>
+
+          <!-- Alignment Guide Lines -->
+          <div class="alignment-guide-x" id="guide-x" style="display:none;"></div>
+          <div class="alignment-guide-y" id="guide-y" style="display:none;"></div>
+
+          <!-- Timeline Ruler (Only active in timeline mode) -->
+          <div class="timeline-ruler" id="timeline-ruler" style="display:none;"></div>
+
+          <!-- Nodes & Sticky Notes HTML Container -->
+          <div class="nodes-layer" id="nodes-layer"></div>
+          <div class="notes-layer" id="notes-layer"></div>
+
+          <!-- Selection Marquee box -->
+          <div class="selection-marquee" id="selection-marquee" style="display:none;"></div>
+        </div>
+
+        <!-- Minimap Viewport -->
+        <div class="minimap-container" id="minimap-container">
+          <canvas class="minimap-canvas" id="minimap-canvas"></canvas>
+          <div class="minimap-viewport" id="minimap-viewport"></div>
+        </div>
+
+        <!-- Floating Canvas Quick Dock -->
+        <div class="canvas-floating-dock" id="canvas-floating-dock">
+          <button class="dock-btn active" id="dock-tool-select" title="선택 도구 (V)">
+            <span id="dock-icon-select"></span>
+            <span>선택</span>
+          </button>
+          <button class="dock-btn" id="dock-tool-pan" title="화면 이동 도구 (H / Space)">
+            <span id="dock-icon-pan"></span>
+            <span>이동</span>
+          </button>
+          <div class="dock-divider"></div>
+          <button class="dock-btn" id="dock-add-task" title="새 태스크 노드 추가 (T)">
+            <span id="dock-icon-task"></span>
+            <span>태스크</span>
+          </button>
+          <button class="dock-btn" id="dock-add-condition" title="조건 분기 노드 추가 (C)">
+            <span id="dock-icon-condition"></span>
+            <span>조건문</span>
+          </button>
+          <button class="dock-btn" id="dock-add-note" title="스티키 메모 추가 (N)">
+            <span id="dock-icon-note"></span>
+            <span>메모</span>
+          </button>
+          <div class="dock-divider"></div>
+          <button class="dock-btn" id="dock-ai-sparkle" title="AI 초안 만들기 (⌘J)" style="color: #c084fc;">
+            <span id="dock-icon-ai"></span>
+            <span>AI 초안</span>
+          </button>
+        </div>
+
+        <!-- Workflow Execution Simulator Drawer -->
+        <div class="simulator-drawer" id="simulator-drawer">
+          <div class="simulator-header">
+            <div class="simulator-title">
+              <span id="sim-icon"></span>
+              <span>WORKFLOW EXECUTION CONSOLE</span>
+            </div>
+            <div class="simulator-actions">
+              <button class="btn-secondary" id="btn-clear-logs" style="padding: 3px 8px; font-size: 11px;">로그 지우기</button>
+              <button class="btn-icon" id="btn-close-simulator">
+                <span id="sim-close-icon"></span>
+              </button>
+            </div>
+          </div>
+          <div class="simulator-logs" id="simulator-logs">
+            <div class="log-entry">
+              <span class="log-time">[SYSTEM]</span>
+              <span class="log-level info">READY</span>
+              <span class="log-message">워크플로우 시뮬레이터 준비 완료. 상단 '실행 시뮬레이션' 버튼을 누르세요.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inspector Collapse Toggle Button -->
+      <button class="inspector-collapse-toggle" id="btn-toggle-inspector" title="인스펙터 접기/펼치기">▶</button>
+
+      <!-- Right: Inspector Drawer (Node Details & Node Memos) -->
+      <aside class="app-inspector" id="app-inspector">
+        <div class="inspector-header">
+          <div class="inspector-title">
+            <span id="inspector-header-icon"></span>
+            <span id="inspector-header-title">속성 인스펙터</span>
+          </div>
+          <button class="btn-icon" id="btn-close-inspector" title="닫기">
+            <span id="inspector-close-icon"></span>
+          </button>
+        </div>
+
+        <div class="inspector-tabs">
+          <div class="inspector-tab active" data-tab="properties" id="tab-inspector-prop">기본 속성</div>
+          <div class="inspector-tab" data-tab="memo" id="tab-inspector-memo">노드 메모 / 가이드</div>
+        </div>
+
+        <div class="inspector-content" id="inspector-content-area">
+          <!-- Populated by Inspector.js -->
+        </div>
+      </aside>
+    </main>
+
+    <!-- Modals -->
+    <!-- 2. AI Draft Generator Modal -->
+    <div class="modal-overlay" id="ai-modal">
+      <div class="modal-content" style="max-width: 640px;">
+        <div class="ai-modal-header">
+          <div class="ai-modal-title">
+            <div class="ai-modal-title-icon" id="ai-title-icon"></div>
+            <div>
+              <div>AI 워크플로우 초안 생성기</div>
+              <div style="font-size: 11px; font-weight: 400; color: var(--text-secondary);">원하는 비즈니스 흐름을 자연어로 적으면 AI가 노드와 조건 분기를 즉시 설계합니다</div>
+            </div>
+          </div>
+          <button class="btn-icon" id="btn-close-ai-modal">
+            <span id="ai-close-icon"></span>
+          </button>
+        </div>
+
+        <!-- AI Form View -->
+        <div class="ai-modal-body" id="ai-modal-form-view">
+          <div class="ai-prompt-box">
+            <label class="inspector-label">무엇을 만드는 워크플로우인가요?</label>
+            <textarea id="ai-prompt-input" class="ai-prompt-textarea" placeholder="예시: 사용자가 환불을 요청하면 주문 금액을 확인하고, 5만원 미만이면 즉시 자동 환불 API를 호출하고 알림 이메일을 보냅니다. 5만원 이상이면 담당자 승인 태스크를 거친 후 승인되면 환불, 거절되면 거절 사유 문자를 전송하는 플로우"></textarea>
+          </div>
+
+          <!-- Quick Preset Chips -->
+          <div class="ai-presets-container">
+            <div class="ai-presets-title">추천 프롬프트 클릭하여 자동 입력:</div>
+            <div class="ai-presets-chips" id="ai-chips-list">
+              <!-- Generated by AIModal.js -->
+            </div>
+          </div>
+
+          <div class="ai-options-row">
+            <label class="ai-checkbox-label">
+              <input type="checkbox" id="ai-opt-autolayout" checked />
+              <span>생성 후 시각적 자동 정렬 적용</span>
+            </label>
+            <label class="ai-checkbox-label">
+              <input type="checkbox" id="ai-opt-clear" checked />
+              <span>현재 캔버스를 비우고 새로 생성</span>
+            </label>
+          </div>
+
+          <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+            <button class="btn-secondary" id="btn-cancel-ai">취소</button>
+            <button class="btn-ai" id="btn-generate-ai-draft" style="padding: 8px 18px;">
+              <span id="ai-sparkle-btn-icon"></span>
+              <span>AI 초안 생성하기</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Generating View (Loader) -->
+        <div class="ai-generating-overlay" id="ai-generating-view" style="display: none;">
+          <div class="ai-spinner"></div>
+          <div class="ai-generating-text" id="ai-progress-status">비즈니스 로직 및 조건 분기 분석 중...</div>
+          <div class="ai-generating-subtext" id="ai-progress-substatus">트리거와 액션 노드 구조를 매핑하고 있습니다</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Keyboard Shortcuts & Help Modal -->
+    <div class="modal-overlay" id="help-modal">
+      <div class="modal-content" style="max-width: 540px;">
+        <div class="project-modal-header">
+          <div class="project-modal-title">
+            <span id="help-modal-icon"></span>
+            <span>단축키 및 제스처 도움말</span>
+          </div>
+          <button class="btn-icon" id="btn-close-help-modal">
+            <span id="help-close-icon"></span>
+          </button>
+        </div>
+        <div class="project-modal-body" style="padding: 16px 20px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-medium); text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
+                <th style="padding: 8px 4px;">단축키 / 제스처</th>
+                <th style="padding: 8px 4px;">기능 설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Space + 드래그</kbd> 또는 <kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">휠 클릭</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">무한 캔버스 화면 이동 (Pan)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">마우스 휠</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">마우스 위치 기준 부드러운 줌 확대/축소</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Ctrl/Cmd + Z</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">실행 취소 (Undo)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Ctrl/Cmd + Y</kbd> / <kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Shift+Z</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">다시 실행 (Redo)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Ctrl/Cmd + D</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">선택한 노드 복제 (Duplicate)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Delete</kbd> / <kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Backspace</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">선택한 노드/연결선/메모 삭제</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">빈 캔버스 드래그</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">영역(Marquee) 다중 노드 선택</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">원형 포트 드래그</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">다른 노드 포트로 와이어 연결선 생성</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Layer -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <!-- Main JavaScript App Entry -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

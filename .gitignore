@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.DS_Store
+*.log
+passmaster/
+report-hub/
+채용공고 스크리너/
