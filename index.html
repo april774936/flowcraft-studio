@@ -33,6 +33,9 @@
     <header class="app-header" id="app-header">
       <!-- Left: Logo & Project Switcher -->
       <div class="header-left">
+        <button class="btn-icon" id="btn-go-home" title="홈 화면으로 가기" style="margin-right: 8px;">
+          🏠
+        </button>
         <div class="logo-area">
           <div class="logo-icon" id="logo-icon"></div>
           <span>FlowCraft</span>
@@ -151,6 +154,14 @@
           <input type="file" id="json-file-input" accept=".json" style="display:none;" />
         </div>
 
+        <!-- Canvas Background Color Picker -->
+        <input type="color" id="bg-color-picker" title="캔버스 배경 색 설정" value="#1e293b" style="margin: 0 4px; border: none; background: transparent; width: 28px; height: 28px; cursor: pointer; padding: 0; border-radius: 4px;" />
+
+        <!-- Settings -->
+        <button class="btn-icon" id="btn-settings" title="설정">
+          <span>⚙️</span>
+        </button>
+
         <!-- Sound Effects Toggle -->
         <button class="btn-icon" id="btn-sound-toggle" title="효과음 켜기/끄기">
           <span id="sound-icon"></span>
@@ -161,10 +172,17 @@
           <span id="help-icon"></span>
         </button>
 
-        <!-- Theme Toggle -->
-        <button class="btn-icon" id="btn-theme-toggle" title="다크/라이트 테마 전환">
-          <span id="theme-icon"></span>
-        </button>
+        <!-- Theme Dropdown -->
+        <div class="dropdown" id="theme-dropdown">
+          <button class="btn-icon" id="btn-theme-toggle" title="테마 선택">
+            <span id="theme-icon"></span>
+          </button>
+          <div class="dropdown-menu" id="theme-menu" style="right: 0; left: auto; min-width: 160px; z-index: 9999;">
+            <div class="dropdown-item" data-theme-value="dark">🌙 기본 테마</div>
+            <div class="dropdown-item" data-theme-value="black">⚫ 블랙 테마</div>
+            <div class="dropdown-item" data-theme-value="light">⚪ 화이트 테마</div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -454,5 +472,6 @@
 
   <!-- Main JavaScript App Entry -->
   <script type="module" src="/src/main.js"></script>
+  <script src="/sync.js"></script>
 </body>
 </html>
