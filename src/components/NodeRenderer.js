@@ -2,6 +2,34 @@
 import { Icons, getIcon } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
 
+// Node shape = flowchart symbol, so node kinds are told apart by outline, not color.
+// Shapes drawn with SVG are stretched to the node box (non-scaling stroke keeps lines crisp);
+// 'terminal' and 'process' are plain CSS boxes.
+const SHAPE_PATHS = {
+  decision: '<path d="M50 1 L99 50 L50 99 L1 50 Z"/>',
+  manual: '<path d="M1 1 H99 L91 99 H9 Z"/>',
+  document: '<path d="M1 1 H99 V84 C80 76 66 104 42 94 C26 88 12 86 1 92 Z"/>',
+  database: '<path d="M1 11 C1 -3 99 -3 99 11 V89 C99 103 1 103 1 89 Z"/><path class="shape-detail" d="M1 11 C1 25 99 25 99 11"/>',
+  subprocess: '<path d="M1 1 H99 V99 H1 Z"/><path class="shape-detail" d="M7 1 V99 M93 1 V99"/>',
+  io: '<path d="M9 1 H99 L91 99 H1 Z"/>',
+  delay: '<path d="M1 1 H76 C104 1 104 99 76 99 H1 Z"/>'
+};
+
+export function getNodeShape(node) {
+  if (node.type === 'start' || node.type === 'end') return 'terminal';
+  if (node.type === 'condition') return 'decision';
+  if (node.type === 'manual' || node.type === 'document') return node.type;
+  switch (node.icon) {
+    case 'database': return 'database';
+    case 'api': return 'subprocess';
+    case 'email':
+    case 'message': return 'io';
+    case 'delay': return 'delay';
+    case 'user': return 'manual';
+    default: return 'process';
+  }
+}
+
 export class NodeRenderer {
   constructor(state, nodesLayer, connections, canvas, timelineRuler) {
     this.state = state;
@@ -30,111 +58,34 @@ export class NodeRenderer {
       el.style.top = `${node.y}px`;
 
       const accentColor = node.color || '#3b82f6';
+      const shape = getNodeShape(node);
+      el.classList.add(`shape-${shape}`);
+      el.style.setProperty('--node-accent', accentColor);
 
-      // 1. Terminal Node Shape (Start / End Stadium Pill)
-      if (node.type === 'start' || node.type === 'end') {
-        el.innerHTML = `
-          <div class="node-pill-content">
-            <div class="node-icon-box" style="color: ${accentColor};">
-              ${getIcon(node.icon, node.type)}
-            </div>
-            <div class="node-title" contenteditable="true" title="더블 클릭하여 수정">${this.escapeHtml(node.title)}</div>
+      const isRunState = node.status && node.status !== 'idle';
+      const ports = ['top', 'right', 'bottom', 'left']
+        .map(p => `<div class="node-port node-port-${p}" data-port="${p}"></div>`)
+        .join('');
+      const quickAdds = shape === 'terminal' && node.type === 'end'
+        ? ''
+        : `<div class="node-quick-add add-right" data-direction="right" title="${node.type === 'condition' ? 'Yes 분기 다음 단계 추가' : '우측에 다음 단계 추가'}">+</div>` +
+          (shape === 'terminal' ? '' : `<div class="node-quick-add add-bottom" data-direction="bottom" title="${node.type === 'condition' ? 'No 분기 다음 단계 추가' : '하단에 다음 단계 추가'}">+</div>`);
+
+      el.innerHTML = `
+        ${SHAPE_PATHS[shape] ? `<svg class="node-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${SHAPE_PATHS[shape]}</svg>` : ''}
+        <div class="node-body">
+          <div class="node-header">
+            <div class="node-icon" style="color: ${accentColor};">${getIcon(node.icon, node.type)}</div>
+            <div class="node-title" contenteditable="true" spellcheck="false" title="클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
           </div>
-          <!-- Ports -->
-          <div class="node-port node-port-right" data-port="right" title="출력"></div>
-          <div class="node-port node-port-left" data-port="left" title="입력"></div>
-          <div class="node-port node-port-top" data-port="top" title="포트"></div>
-          <div class="node-port node-port-bottom" data-port="bottom" title="포트"></div>
-          <!-- Quick Add Button -->
-          <div class="node-quick-add add-right" data-direction="right" title="우측에 다음 단계 연결">+</div>
-        `;
-      } 
-      // 2. Decision Node Shape (Condition Diamond)
-      else if (node.type === 'condition') {
-        el.innerHTML = `
-          <div class="node-diamond-inner">
-            <div class="node-icon-box" style="color: #a78bfa; width: 26px; height: 26px;">
-              ${getIcon(node.icon, 'condition')}
-            </div>
-            <div class="node-title" contenteditable="true" title="더블 클릭하여 질문 수정">${this.escapeHtml(node.title)}</div>
-          </div>
-          <!-- Ports with explicit Yes / No badges -->
-          <div class="node-port node-port-top" data-port="top" title="조건 입력"></div>
-          <div class="node-port node-port-left" data-port="left" title="조건 입력"></div>
-          <div class="node-port node-port-right" data-port="right" title="참 (Yes)"><span class="port-badge-yes">Yes</span></div>
-          <div class="node-port node-port-bottom" data-port="bottom" title="거짓 (No)"><span class="port-badge-no">No</span></div>
-          <!-- Quick Add Buttons -->
-          <div class="node-quick-add add-right" data-direction="right" title="Yes 분기 다음 단계 추가">+</div>
-          <div class="node-quick-add add-bottom" data-direction="bottom" title="No 분기 다음 단계 추가">+</div>
-        `;
-      } 
-      // 3. Special Shapes (Manual Operation & Document)
-      else if (node.type === 'manual' || node.type === 'document') {
-        el.innerHTML = `
-          <div class="node-shape-bg type-${node.type}"></div>
-          <div class="node-accent-bar" style="background-color: ${accentColor}; z-index: 2; position: relative;"></div>
-          <div class="node-content" style="position: relative; z-index: 2;">
-            <div class="node-header">
-              <div class="node-icon-box" style="color: ${accentColor};">
-                ${getIcon(node.icon, node.type)}
-              </div>
-              <div class="node-title-container">
-                <div class="node-title" contenteditable="true" title="더블 클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
-              </div>
-            </div>
-            ${node.desc ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
-            ${node.memo ? `<div class="node-memo-badge" style="font-size: 10px; color: var(--text-secondary); margin-top: 6px; padding: 4px 6px; background: var(--bg-surface-active); border-radius: 4px; border-left: 2px solid ${accentColor}; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote} ${this.escapeHtml(node.memo)}</div>` : ''}
-            <div class="node-footer">
-              <span class="node-type-badge">${node.type}</span>
-              <div class="node-status-indicator">
-                <span class="status-dot"></span>
-                <span>${this.getStatusLabel(node.status)}</span>
-              </div>
-            </div>
-          </div>
-          <!-- Connection Ports -->
-          <div class="node-port node-port-top" data-port="top" title="위쪽 포트"></div>
-          <div class="node-port node-port-right" data-port="right" title="오른쪽 포트"></div>
-          <div class="node-port node-port-bottom" data-port="bottom" title="아래쪽 포트"></div>
-          <div class="node-port node-port-left" data-port="left" title="왼쪽 포트"></div>
-          <!-- Quick Add Buttons -->
-          <div class="node-quick-add add-right" data-direction="right" title="우측에 다음 단계 추가">+</div>
-          <div class="node-quick-add add-bottom" data-direction="bottom" title="하단에 다음 단계 추가">+</div>
-        `;
-      }
-      // 4. Process / Task Node Shape (Standard Rectangle)
-      else {
-        el.innerHTML = `
-          <div class="node-accent-bar" style="background-color: ${accentColor};"></div>
-          <div class="node-content">
-            <div class="node-header">
-              <div class="node-icon-box" style="color: ${accentColor};">
-                ${getIcon(node.icon, node.type)}
-              </div>
-              <div class="node-title-container">
-                <div class="node-title" contenteditable="true" title="더블 클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
-              </div>
-            </div>
-            ${node.desc ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
-            ${node.memo ? `<div class="node-memo-badge" style="font-size: 10px; color: var(--text-secondary); margin-top: 6px; padding: 4px 6px; background: var(--bg-surface-active); border-radius: 4px; border-left: 2px solid ${accentColor}; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote} ${this.escapeHtml(node.memo)}</div>` : ''}
-            <div class="node-footer">
-              <span class="node-type-badge">${node.type}</span>
-              <div class="node-status-indicator">
-                <span class="status-dot"></span>
-                <span>${this.getStatusLabel(node.status)}</span>
-              </div>
-            </div>
-          </div>
-          <!-- Connection Ports -->
-          <div class="node-port node-port-top" data-port="top" title="위쪽 포트"></div>
-          <div class="node-port node-port-right" data-port="right" title="오른쪽 포트"></div>
-          <div class="node-port node-port-bottom" data-port="bottom" title="아래쪽 포트"></div>
-          <div class="node-port node-port-left" data-port="left" title="왼쪽 포트"></div>
-          <!-- Quick Add Buttons -->
-          <div class="node-quick-add add-right" data-direction="right" title="우측에 다음 단계 추가">+</div>
-          <div class="node-quick-add add-bottom" data-direction="bottom" title="하단에 다음 단계 추가">+</div>
-        `;
-      }
+          ${node.desc && shape !== 'terminal' && shape !== 'decision' ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
+          ${node.memo && shape !== 'terminal' && shape !== 'decision' ? `<div class="node-memo" title="${this.escapeHtml(node.memo)}">${Icons.stickyNote}<span>${this.escapeHtml(node.memo)}</span></div>` : ''}
+        </div>
+        ${node.memo && (shape === 'terminal' || shape === 'decision') ? `<div class="node-memo-dot" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote}</div>` : ''}
+        ${isRunState ? `<div class="node-run-status"><span class="status-dot"></span>${this.getStatusLabel(node.status)}</div>` : ''}
+        ${ports}
+        ${quickAdds}
+      `;
 
       // Selection & Drag initiation
       el.addEventListener('mousedown', (e) => {

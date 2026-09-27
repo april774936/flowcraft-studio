@@ -12,15 +12,22 @@ export class Connections {
 
   // Get accurate port coordinates based on node shape
   getPortCoordinates(node, port) {
-    let width = 220;
-    let height = 88;
+    let width = 240;
+    let height = 72;
 
     if (node.type === 'start' || node.type === 'end') {
       width = 180;
-      height = 54;
+      height = 48;
     } else if (node.type === 'condition') {
-      width = 160;
-      height = 110;
+      width = 200;
+      height = 120;
+    }
+
+    // Prefer the rendered size (nodes grow with their text)
+    const el = document.querySelector(`[data-node-id="${node.id}"]`);
+    if (el && el.offsetWidth) {
+      width = el.offsetWidth;
+      height = el.offsetHeight;
     }
 
     const nx = node.x;

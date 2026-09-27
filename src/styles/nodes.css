@@ -1,313 +1,264 @@
-/* Workflow Node Card - Professional Flowchart ISO/ANSI Standards */
+/* Workflow nodes — flowchart symbols: the outline tells the node kind,
+   the accent color (node.color) tints the outline and icon only. */
 .workflow-node {
+  --node-accent: #3b82f6;
+  --node-stroke: color-mix(in srgb, var(--node-accent) 65%, var(--border-medium));
   position: absolute;
-  min-width: 220px;
-  max-width: 270px;
-  background: var(--node-bg-default);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--border-radius-md);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-card);
+  width: 240px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
   cursor: grab;
   z-index: 20;
-  transition: box-shadow var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast);
-  backdrop-filter: var(--backdrop-blur);
+  color: var(--text-primary);
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+
+.workflow-node:active { cursor: grabbing; }
+
+/* ---------- Shape layer ---------- */
+/* CSS-box shapes */
+.workflow-node.shape-process,
+.workflow-node.shape-terminal {
+  background: var(--node-fill);
+  border: 1.5px solid var(--node-stroke);
+  box-shadow: var(--shadow-card);
+}
+.workflow-node.shape-process { border-radius: 6px; }
+.workflow-node.shape-terminal {
+  width: max-content;
+  min-width: 150px;
+  max-width: 240px;
+  min-height: 48px;
+  border-radius: 9999px;
+}
+
+/* SVG shapes */
+.node-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
 }
+.node-shape path {
+  fill: var(--node-fill);
+  stroke: var(--node-stroke);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.node-shape path.shape-detail { fill: none; }
 
-.workflow-node:active {
-  cursor: grabbing;
-}
+.workflow-node.shape-decision { width: 210px; min-height: 124px; }
+.workflow-node.shape-database { min-height: 84px; }
+.workflow-node.shape-document { min-height: 76px; }
 
-.workflow-node:hover {
-  border-color: var(--border-strong);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), var(--shadow-lg);
-  transform: translateY(-1px);
-}
+/* ---------- Hover / selected / dragging ---------- */
+.workflow-node:hover { transform: translateY(-1px); }
+.workflow-node:hover { --node-stroke: var(--node-accent); }
 
-.workflow-node.selected {
-  border-color: var(--primary-light);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 2px var(--primary), 0 0 24px var(--primary-glow), var(--shadow-lg);
-  z-index: 30;
-  transform: translateY(-1px);
+.workflow-node.selected { --node-stroke: var(--primary-light); z-index: 30; }
+.workflow-node.selected.shape-process,
+.workflow-node.selected.shape-terminal {
+  box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-lg);
 }
+.workflow-node.selected .node-shape {
+  filter: drop-shadow(0 0 1.5px var(--primary)) drop-shadow(0 0 10px var(--primary-glow));
+}
+.workflow-node.selected .node-shape path { stroke-width: 2px; }
 
 .workflow-node.dragging {
-  transform: scale(1.02) translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  cursor: grabbing;
+  transform: scale(1.02);
   z-index: 40;
+  cursor: grabbing;
 }
 
-/* Category Accent Gradient Bar on top */
-.node-accent-bar {
-  height: 4px;
-  border-top-left-radius: var(--border-radius-md);
-  border-top-right-radius: var(--border-radius-md);
-  background: var(--primary);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* Node Internal Content */
-.node-content {
-  padding: 12px 14px 10px 14px;
+/* ---------- Content ---------- */
+.node-body {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .node-header {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
-.node-icon-box {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+.node-icon {
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
-
-.node-title-container {
-  flex: 1;
-  min-width: 0;
-}
+.node-icon svg { width: 18px; height: 18px; }
 
 .node-title {
-  font-size: 13px;
-  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.35;
   letter-spacing: -0.01em;
   color: var(--text-primary);
-  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
   outline: none;
   cursor: text;
 }
-
 .node-title[contenteditable="true"]:focus {
+  display: block;
   background: var(--bg-surface-elevated);
   box-shadow: 0 0 0 2px var(--primary-glow);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 1px 4px;
 }
 
 .node-desc {
-  font-size: 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--text-secondary);
-  line-height: 1.45;
-  word-break: break-word;
-  max-height: 36px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Node Footer */
-.node-footer {
+.node-memo {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 6px;
+  align-items: flex-start;
+  gap: 6px;
   margin-top: 2px;
-  font-size: 10px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--border-medium);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.node-memo svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; color: #eab308; }
+.node-memo span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.node-type-badge {
-  text-transform: uppercase;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-}
-
-.node-status-indicator {
+.node-memo-dot {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: var(--text-muted);
-  font-weight: 500;
+  justify-content: center;
+  background: var(--node-fill);
+  border: 1px solid var(--border-medium);
+  color: #eab308;
 }
+.node-memo-dot svg { width: 11px; height: 11px; }
 
+/* Shape-specific content layout */
+.shape-terminal .node-body { padding: 10px 20px; }
+.shape-terminal .node-header { justify-content: center; }
+.shape-terminal .node-title { flex: 0 1 auto; text-align: center; }
+
+.shape-decision .node-body {
+  padding: 16px 48px;
+  align-items: center;
+  text-align: center;
+}
+.shape-decision .node-header { flex-direction: column; gap: 4px; }
+.shape-decision .node-title { font-size: 13.5px; text-align: center; -webkit-line-clamp: 3; }
+
+.shape-manual .node-body,
+.shape-io .node-body { padding-left: 26px; padding-right: 26px; }
+.shape-subprocess .node-body { padding-left: 24px; padding-right: 24px; }
+.shape-delay .node-body { padding-right: 34px; }
+.shape-database .node-body { padding-top: 22px; }
+.shape-document .node-body { padding-bottom: 20px; }
+
+/* Simulation status — only shown while a run is in progress / finished */
+.node-run-status {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--node-fill);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+}
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--status-idle);
 }
+.status-running .status-dot { background: var(--status-running); box-shadow: 0 0 6px var(--status-running); }
+.status-success .status-dot { background: var(--status-success); }
+.status-error .status-dot { background: var(--status-error); }
+.workflow-node.status-running { --node-stroke: var(--status-running); }
 
-/* 1. Terminal Node (Start / End) - Rounded Stadium Capsule */
-.workflow-node.type-start,
-.workflow-node.type-end {
-  min-width: 175px;
-  max-width: 210px;
-  border-radius: 9999px;
-  background: var(--node-bg-pill);
-}
-
-.workflow-node.type-start {
-  border: 1.8px solid #10b981;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25), var(--shadow-card);
-}
-
-.workflow-node.type-end {
-  border: 1.8px solid #ec4899;
-  box-shadow: 0 0 16px rgba(236, 72, 153, 0.25), var(--shadow-card);
-}
-
-.workflow-node.type-start .node-accent-bar,
-.workflow-node.type-end .node-accent-bar {
-  display: none;
-}
-
-.node-pill-content {
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-}
-
-.node-pill-content .node-title {
-  font-size: 13.5px;
-  font-weight: 700;
-}
-
-/* 2. Decision Node (Condition / If-Else) - Flowchart Diamond */
-.workflow-node.type-condition {
-  width: 160px;
-  height: 110px;
-  min-width: 160px;
-  max-width: 160px;
-  border-radius: 12px;
-  background: var(--node-bg-diamond);
-  border: 1.8px solid #8b5cf6;
-  box-shadow: 0 0 18px rgba(139, 92, 246, 0.3), var(--shadow-card);
-}
-
-.workflow-node.type-condition .node-accent-bar {
-  display: none;
-}
-
-.node-diamond-inner {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  text-align: center;
-  gap: 6px;
-}
-
-.node-diamond-inner .node-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  white-space: normal;
-  line-height: 1.3;
-}
-
-/* Labeled Port Badges for Decision Node */
-.port-badge-yes {
-  position: absolute;
-  right: -30px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 800;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.18);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  padding: 1px 5px;
-  border-radius: 4px;
-  pointer-events: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.port-badge-no {
-  position: absolute;
-  bottom: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  font-weight: 800;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.18);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  padding: 1px 5px;
-  border-radius: 4px;
-  pointer-events: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* Connection Ports (Magnetic Touch Points) */
+/* ---------- Connection ports: only while hovering, selected or connecting ---------- */
 .node-port {
   position: absolute;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--node-port-bg);
-  border: 2.2px solid #60a5fa;
+  border: 2px solid var(--primary);
   z-index: 25;
   cursor: crosshair;
-  transition: all var(--transition-fast);
-  box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
+  opacity: 0;
+  transition: opacity var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+}
+.workflow-node:hover .node-port,
+.workflow-node.selected .node-port,
+.connecting .node-port {
+  opacity: 1;
 }
 
-.node-port:hover {
-  background: #ffffff;
-  border-color: #38bdf8;
-  transform: scale(1.6);
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.4), 0 0 12px #38bdf8;
-}
+.node-port-top { top: -6px; left: 50%; transform: translateX(-50%); }
+.node-port-bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
+.node-port-left { left: -6px; top: 50%; transform: translateY(-50%); }
+.node-port-right { right: -6px; top: 50%; transform: translateY(-50%); }
 
-.node-port-top {
-  top: -6.5px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.node-port-top:hover {
-  transform: translateX(-50%) scale(1.6);
-}
+.node-port:hover { background: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); }
+.node-port-top:hover { transform: translateX(-50%) scale(1.4); }
+.node-port-bottom:hover { transform: translateX(-50%) scale(1.4); }
+.node-port-left:hover { transform: translateY(-50%) scale(1.4); }
+.node-port-right:hover { transform: translateY(-50%) scale(1.4); }
 
-.node-port-bottom {
-  bottom: -6.5px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.node-port-bottom:hover {
-  transform: translateX(-50%) scale(1.6);
-}
-
-.node-port-left {
-  left: -6.5px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.node-port-left:hover {
-  transform: translateY(-50%) scale(1.6);
-}
-
-.node-port-right {
-  right: -6.5px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.node-port-right:hover {
-  transform: translateY(-50%) scale(1.6);
-}
-
-/* 3. Whimsical / Miro Style Quick Add [+] Buttons */
+/* ---------- Quick add [+] buttons ---------- */
 .node-quick-add {
   position: absolute;
   width: 20px;
@@ -327,108 +278,15 @@
   box-shadow: 0 2px 8px var(--primary-glow);
   z-index: 35;
 }
-
 .workflow-node:hover .node-quick-add {
   opacity: 0.9;
   pointer-events: auto;
 }
-
 .node-quick-add:hover {
   opacity: 1;
-  transform: scale(1.25);
   background: var(--primary-hover);
-  box-shadow: 0 4px 14px var(--primary-glow);
 }
-
-.node-quick-add.add-right {
-  right: -26px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.node-quick-add.add-right:hover {
-  transform: translateY(-50%) scale(1.25);
-}
-
-.node-quick-add.add-bottom {
-  bottom: -26px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.node-quick-add.add-bottom:hover {
-  transform: translateX(-50%) scale(1.25);
-}
-
-/* Custom Backgrounds for Manual Operation & Document (Auditing/Accounting Flowchart) */
-.workflow-node.type-manual,
-.workflow-node.type-document {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.workflow-node.type-manual:hover,
-.workflow-node.type-document:hover {
-  border: none;
-  box-shadow: none;
-  transform: translateY(-1px);
-}
-
-.workflow-node.type-manual.selected,
-.workflow-node.type-document.selected {
-  border: none;
-  box-shadow: none;
-}
-
-.workflow-node.type-manual.selected .node-shape-bg,
-.workflow-node.type-document.selected .node-shape-bg {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 2px var(--primary), 0 0 24px var(--primary-glow), var(--shadow-lg);
-}
-
-.node-shape-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--node-bg-default);
-  /* Use a background gradient similar to other nodes but we rely on standard bg for now */
-  border: 1px solid var(--border-medium);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-card);
-  backdrop-filter: var(--backdrop-blur);
-  z-index: 0;
-  transition: box-shadow var(--transition-normal);
-}
-
-/* Inverted Trapezoid for Manual Operation */
-.node-shape-bg.type-manual {
-  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
-  border-radius: 0;
-  border: none;
-  filter: drop-shadow(0 0 1px var(--border-medium));
-}
-
-/* Wavy bottom (simplified with angled cut) for Document */
-.node-shape-bg.type-document {
-  clip-path: polygon(0 0, 100% 0, 100% 85%, 75% 100%, 50% 85%, 25% 100%, 0 85%);
-  border-radius: 0;
-  border: none;
-  filter: drop-shadow(0 0 1px var(--border-medium));
-}
-
-/* Adjust port positions for clipped shapes */
-.workflow-node.type-manual .node-port-bottom {
-  bottom: 0px; 
-}
-.workflow-node.type-document .node-port-bottom {
-  bottom: 12%; 
-}
-
-/* Prevent text spilling over the clipped edges */
-.workflow-node.type-manual .node-content {
-  padding-left: 20px;
-  padding-right: 20px;
-}
-.workflow-node.type-document .node-content {
-  padding-bottom: 20px;
-}
+.node-quick-add.add-right { right: -30px; top: 50%; transform: translateY(-50%); }
+.node-quick-add.add-right:hover { transform: translateY(-50%) scale(1.2); }
+.node-quick-add.add-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
+.node-quick-add.add-bottom:hover { transform: translateX(-50%) scale(1.2); }
