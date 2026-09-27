@@ -62,6 +62,7 @@ export class NotesManager {
         }
 
         const worldPos = this.canvas.screenToWorld(e.clientX, e.clientY);
+        this.state.beginGesture();
         this.dragState = {
           noteId: note.id,
           offsetX: worldPos.x - note.x,
@@ -98,6 +99,7 @@ export class NotesManager {
       resizeHandle.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         this.state.selectNote(note.id);
+        this.state.beginGesture();
         this.resizeState = {
           noteId: note.id,
           startX: e.clientX,
@@ -129,6 +131,7 @@ export class NotesManager {
     });
 
     window.addEventListener('mouseup', () => {
+      if (this.dragState || this.resizeState) this.state.endGesture();
       this.dragState = null;
       this.resizeState = null;
     });

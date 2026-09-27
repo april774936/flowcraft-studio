@@ -1,8 +1,13 @@
 // ProjectManager: Manages multiple workflows by project
+
+// Sample projects use a fixed, old timestamp so that on a fresh device they
+// never win a sync merge against the user's edited copies.
+const DEFAULT_PROJECT_TIMESTAMP = '2026-01-01T00:00:00.000Z';
 export class ProjectManager {
   constructor() {
     this.STORAGE_KEY = 'flowcraft_projects_v2';
     this.ACTIVE_KEY = 'flowcraft_active_project_id';
+    this.TOMBSTONE_KEY = 'flowcraft_deleted_project_ids';
     this.projects = this.loadProjects();
     this.activeProjectId = this.loadActiveProjectId();
   }
@@ -157,6 +162,13 @@ export class ProjectManager {
 
   hardDeleteProject(projectId) {
     this.projects = this.projects.filter(p => p.id !== projectId);
+    // Tombstone so cross-device sync doesn't resurrect it from another device's copy
+    let tombstones = {};
+    try {
+      tombstones = JSON.parse(localStorage.getItem(this.TOMBSTONE_KEY)) || {};
+    } catch (e) { /* ignore corrupt value */ }
+    tombstones[projectId] = new Date().toISOString();
+    localStorage.setItem(this.TOMBSTONE_KEY, JSON.stringify(tombstones));
     this.saveProjects();
     return true;
   }
@@ -174,14 +186,22 @@ export class ProjectManager {
     }
   }
 
+  updateProjectViewport(projectId, viewport) {
+    const proj = this.projects.find(p => p.id === projectId);
+    if (proj) {
+      proj.viewport = viewport;
+      this.saveProjects();
+    }
+  }
+
   getDefaultProjects() {
     return [
       {
         id: 'proj_ecommerce_order',
         name: '이커머스 결제 & 배송 자동화',
         mode: 'flowchart',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: DEFAULT_PROJECT_TIMESTAMP,
+        updatedAt: DEFAULT_PROJECT_TIMESTAMP,
         viewport: { x: 100, y: 120, zoom: 0.95 },
         notes: [
           {
@@ -323,8 +343,8 @@ export class ProjectManager {
         id: 'proj_cicd_pipeline',
         name: 'CI/CD 클라우드 자동 배포 파이프라인',
         mode: 'flowchart',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: DEFAULT_PROJECT_TIMESTAMP,
+        updatedAt: DEFAULT_PROJECT_TIMESTAMP,
         viewport: { x: 100, y: 120, zoom: 0.95 },
         notes: [
           {

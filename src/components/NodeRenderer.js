@@ -154,6 +154,7 @@ export class NodeRenderer {
         const worldPos = this.canvas.screenToWorld(e.clientX, e.clientY);
         const selectedNodes = this.state.nodes.filter(n => this.state.selectedNodeIds.has(n.id));
 
+        this.state.beginGesture();
         this.dragNodesState = {
           startWorldX: worldPos.x,
           startWorldY: worldPos.y,
@@ -323,7 +324,7 @@ export class NodeRenderer {
         });
         this.dragNodesState = null;
         this.canvas.hideGuides();
-        this.state.save();
+        this.state.endGesture();
         this.state.emit('canvas:change');
       }
 

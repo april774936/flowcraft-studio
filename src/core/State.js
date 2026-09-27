@@ -19,6 +19,10 @@ export class State {
     this.historyStack = [];
     this.redoStack = [];
     this.isApplyingHistory = false;
+    // Snapshot taken when a drag/resize gesture starts; while set, per-move
+    // updates skip history and saving until endGesture() commits them once.
+    this.gestureSnapshot = null;
+    this.viewportSaveTimer = null;
 
     // Load active project on init
     this.loadActiveProject();
@@ -52,13 +56,14 @@ export class State {
     this.selectedNoteId = null;
     this.historyStack = [];
     this.redoStack = [];
+    this.gestureSnapshot = null;
 
     this.emit('project:loaded', proj);
     this.emit('canvas:change');
   }
 
   save() {
-    if (this.isApplyingHistory) return;
+    if (this.isApplyingHistory || this.gestureSnapshot) return;
     this.projectManager.updateActiveProjectData({
       nodes: this.nodes,
       edges: this.edges,
@@ -67,13 +72,21 @@ export class State {
     });
   }
 
-  pushHistory() {
-    if (this.isApplyingHistory) return;
-    const snapshot = JSON.stringify({
+  snapshot() {
+    return JSON.stringify({
       nodes: this.nodes,
       edges: this.edges,
       notes: this.notes
     });
+  }
+
+  pushHistory() {
+    if (this.isApplyingHistory || this.gestureSnapshot) return;
+    this.recordHistory(this.snapshot());
+    this.save();
+  }
+
+  recordHistory(snapshot) {
     // Don't push identical states
     if (this.historyStack.length > 0 && this.historyStack[this.historyStack.length - 1] === snapshot) {
       return;
@@ -81,8 +94,22 @@ export class State {
     this.historyStack.push(snapshot);
     if (this.historyStack.length > 50) this.historyStack.shift();
     this.redoStack = []; // Clear redo stack on new action
-    this.save();
     this.emit('history:change');
+  }
+
+  // Drag/resize: one undo step and one save per gesture instead of per mousemove
+  beginGesture() {
+    if (this.gestureSnapshot) this.endGesture();
+    this.gestureSnapshot = this.snapshot();
+  }
+
+  endGesture() {
+    const before = this.gestureSnapshot;
+    if (!before) return;
+    this.gestureSnapshot = null;
+    if (before === this.snapshot()) return;
+    this.recordHistory(before);
+    this.save();
   }
 
   undo() {
@@ -372,7 +399,18 @@ export class State {
     this.viewport.y = Math.round(y);
     this.viewport.zoom = Math.min(Math.max(zoom, 0.25), 2.5);
     this.emit('viewport:change', this.viewport);
-    this.save();
+    this.scheduleViewportSave();
+  }
+
+  // Pan/zoom fire on every mouse/wheel event: persist the viewport lazily and
+  // without bumping the project's updatedAt (so it doesn't count as an edit for sync)
+  scheduleViewportSave() {
+    const projectId = this.projectManager.activeProjectId;
+    const viewport = { ...this.viewport };
+    clearTimeout(this.viewportSaveTimer);
+    this.viewportSaveTimer = setTimeout(() => {
+      this.projectManager.updateProjectViewport(projectId, viewport);
+    }, 400);
   }
 
   zoomBy(delta, centerX, centerY) {
