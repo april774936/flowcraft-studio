@@ -33,8 +33,8 @@
     <header class="app-header" id="app-header">
       <!-- Left: Logo & Project Switcher -->
       <div class="header-left">
-        <button class="btn-icon" id="btn-go-home" title="홈 화면으로 가기" style="margin-right: 8px;">
-          🏠
+        <button class="btn-icon" id="btn-go-home" title="홈 화면으로 가기">
+          <span id="home-icon"></span>
         </button>
         <div class="logo-area">
           <div class="logo-icon" id="logo-icon"></div>
@@ -45,7 +45,6 @@
         <button class="project-selector-btn" id="btn-project-selector" title="프로젝트 전환 및 관리">
           <span class="project-icon-wrapper" id="project-icon-wrapper"></span>
           <span class="project-name-display" id="header-project-name">기본 프로젝트</span>
-          <span class="badge-project">Project</span>
           <span class="chevron-wrapper" id="project-chevron-wrapper"></span>
         </button>
       </div>
@@ -55,14 +54,14 @@
         <!-- AI Draft Generator Pill -->
         <button class="btn-ai" id="btn-ai-draft" title="AI에게 워크플로우 초안을 자동으로 만들게 합니다">
           <span id="ai-btn-icon"></span>
-          <span>AI 초안 만들기</span>
+          <span class="btn-label">AI 초안 만들기</span>
         </button>
 
         <!-- AI Copilot Dropdown -->
         <div class="dropdown" id="ai-copilot-dropdown">
           <button class="btn-secondary" id="btn-ai-copilot-toggle" title="AI 워크플로우 조작 및 추천" style="border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
             <span id="ai-copilot-icon"></span>
-            <span>AI 조작</span>
+            <span class="btn-label">AI 조작</span>
             <span id="ai-copilot-chevron"></span>
           </button>
           <div class="dropdown-menu" id="ai-copilot-menu" style="min-width: 220px;">
@@ -87,19 +86,19 @@
           <!-- Add Sticky Note Button -->
           <button class="btn-secondary" id="btn-add-note" title="캔버스에 스티키 메모 추가">
             <span id="note-btn-icon"></span>
-            <span>메모 추가</span>
+            <span class="btn-label">메모 추가</span>
           </button>
 
           <!-- Auto Layout DAG -->
           <button class="btn-secondary" id="btn-auto-layout" title="노드들을 위계에 맞춰 깔끔하게 자동 정렬합니다">
             <span id="layout-btn-icon"></span>
-            <span>자동 정렬</span>
+            <span class="btn-label">자동 정렬</span>
           </button>
 
           <!-- Run / Simulate Workflow -->
           <button class="btn-simulate" id="btn-run-simulation" title="워크플로우 실행 과정을 시각적으로 시뮬레이션합니다">
             <span id="run-btn-icon"></span>
-            <span id="run-btn-text">실행 시뮬레이션</span>
+            <span class="btn-label" id="run-btn-text">실행 시뮬레이션</span>
           </button>
         </div>
       </div>
@@ -134,7 +133,7 @@
         <div class="dropdown" id="export-dropdown">
           <button class="btn-secondary" id="btn-export-toggle">
             <span id="export-icon"></span>
-            <span>내보내기</span>
+            <span class="btn-label">내보내기</span>
             <span id="export-chevron"></span>
           </button>
           <div class="dropdown-menu" id="export-menu">
@@ -155,12 +154,9 @@
         </div>
 
         <!-- Canvas Background Color Picker -->
-        <input type="color" id="bg-color-picker" title="캔버스 배경 색 설정" value="#1e293b" style="margin: 0 4px; border: none; background: transparent; width: 28px; height: 28px; cursor: pointer; padding: 0; border-radius: 4px;" />
-
-        <!-- Settings -->
-        <button class="btn-icon" id="btn-settings" title="설정">
-          <span>⚙️</span>
-        </button>
+        <label class="color-swatch-btn" title="캔버스 배경 색 설정">
+          <input type="color" id="bg-color-picker" value="#1e293b" />
+        </label>
 
         <!-- Sound Effects Toggle -->
         <button class="btn-icon" id="btn-sound-toggle" title="효과음 켜기/끄기">
@@ -270,29 +266,29 @@
         <div class="canvas-floating-dock" id="canvas-floating-dock">
           <button class="dock-btn active" id="dock-tool-select" title="선택 도구 (V)">
             <span id="dock-icon-select"></span>
-            <span>선택</span>
+            <span class="btn-label">선택</span>
           </button>
           <button class="dock-btn" id="dock-tool-pan" title="화면 이동 도구 (H / Space)">
             <span id="dock-icon-pan"></span>
-            <span>이동</span>
+            <span class="btn-label">이동</span>
           </button>
           <div class="dock-divider"></div>
           <button class="dock-btn" id="dock-add-task" title="새 태스크 노드 추가 (T)">
             <span id="dock-icon-task"></span>
-            <span>태스크</span>
+            <span class="btn-label">태스크</span>
           </button>
           <button class="dock-btn" id="dock-add-condition" title="조건 분기 노드 추가 (C)">
             <span id="dock-icon-condition"></span>
-            <span>조건문</span>
+            <span class="btn-label">조건문</span>
           </button>
           <button class="dock-btn" id="dock-add-note" title="스티키 메모 추가 (N)">
             <span id="dock-icon-note"></span>
-            <span>메모</span>
+            <span class="btn-label">메모</span>
           </button>
           <div class="dock-divider"></div>
           <button class="dock-btn" id="dock-ai-sparkle" title="AI 초안 만들기 (⌘J)" style="color: #c084fc;">
             <span id="dock-icon-ai"></span>
-            <span>AI 초안</span>
+            <span class="btn-label">AI 초안</span>
           </button>
         </div>
 
@@ -301,7 +297,7 @@
           <div class="simulator-header">
             <div class="simulator-title">
               <span id="sim-icon"></span>
-              <span>WORKFLOW EXECUTION CONSOLE</span>
+              <span class="btn-label">실행 콘솔</span>
             </div>
             <div class="simulator-actions">
               <button class="btn-secondary" id="btn-clear-logs" style="padding: 3px 8px; font-size: 11px;">로그 지우기</button>

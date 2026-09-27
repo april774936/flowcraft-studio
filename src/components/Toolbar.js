@@ -29,6 +29,8 @@ export class Toolbar {
   initIcons() {
     // Populate header icons
     document.getElementById('logo-icon').innerHTML = Icons.workflow;
+    const homeIcon = document.getElementById('home-icon');
+    if (homeIcon) homeIcon.innerHTML = Icons.home;
     document.getElementById('project-icon-wrapper').innerHTML = Icons.folder;
     document.getElementById('project-chevron-wrapper').innerHTML = Icons.chevronDown;
     document.getElementById('ai-btn-icon').innerHTML = Icons.sparkles;
@@ -80,10 +82,6 @@ export class Toolbar {
     document.getElementById('inspector-close-icon').innerHTML = Icons.close;
 
     // Modals icons
-    document.getElementById('project-modal-icon').innerHTML = Icons.folder;
-    document.getElementById('modal-plus-icon').innerHTML = Icons.plus;
-    document.getElementById('modal-close-icon').innerHTML = Icons.close;
-    document.getElementById('project-search-icon').innerHTML = Icons.search;
 
     document.getElementById('ai-title-icon').innerHTML = Icons.sparkles;
     document.getElementById('ai-close-icon').innerHTML = Icons.close;

@@ -19,6 +19,10 @@ export class State {
     this.historyStack = [];
     this.redoStack = [];
     this.isApplyingHistory = false;
+    // Snapshot taken when a drag/resize gesture starts; while set, per-move
+    // updates skip history and saving until endGesture() commits them once.
+    this.gestureSnapshot = null;
+    this.viewportSaveTimer = null;
 
     // Load active project on init
     this.loadActiveProject();
@@ -52,13 +56,14 @@ export class State {
     this.selectedNoteId = null;
     this.historyStack = [];
     this.redoStack = [];
+    this.gestureSnapshot = null;
 
     this.emit('project:loaded', proj);
     this.emit('canvas:change');
   }
 
   save() {
-    if (this.isApplyingHistory) return;
+    if (this.isApplyingHistory || this.gestureSnapshot) return;
     this.projectManager.updateActiveProjectData({
       nodes: this.nodes,
       edges: this.edges,
@@ -67,13 +72,21 @@ export class State {
     });
   }
 
-  pushHistory() {
-    if (this.isApplyingHistory) return;
-    const snapshot = JSON.stringify({
+  snapshot() {
+    return JSON.stringify({
       nodes: this.nodes,
       edges: this.edges,
       notes: this.notes
     });
+  }
+
+  pushHistory() {
+    if (this.isApplyingHistory || this.gestureSnapshot) return;
+    this.recordHistory(this.snapshot());
+    this.save();
+  }
+
+  recordHistory(snapshot) {
     // Don't push identical states
     if (this.historyStack.length > 0 && this.historyStack[this.historyStack.length - 1] === snapshot) {
       return;
@@ -81,8 +94,22 @@ export class State {
     this.historyStack.push(snapshot);
     if (this.historyStack.length > 50) this.historyStack.shift();
     this.redoStack = []; // Clear redo stack on new action
-    this.save();
     this.emit('history:change');
+  }
+
+  // Drag/resize: one undo step and one save per gesture instead of per mousemove
+  beginGesture() {
+    if (this.gestureSnapshot) this.endGesture();
+    this.gestureSnapshot = this.snapshot();
+  }
+
+  endGesture() {
+    const before = this.gestureSnapshot;
+    if (!before) return;
+    this.gestureSnapshot = null;
+    if (before === this.snapshot()) return;
+    this.recordHistory(before);
+    this.save();
   }
 
   undo() {
@@ -372,7 +399,18 @@ export class State {
     this.viewport.y = Math.round(y);
     this.viewport.zoom = Math.min(Math.max(zoom, 0.25), 2.5);
     this.emit('viewport:change', this.viewport);
-    this.save();
+    this.scheduleViewportSave();
+  }
+
+  // Pan/zoom fire on every mouse/wheel event: persist the viewport lazily and
+  // without bumping the project's updatedAt (so it doesn't count as an edit for sync)
+  scheduleViewportSave() {
+    const projectId = this.projectManager.activeProjectId;
+    const viewport = { ...this.viewport };
+    clearTimeout(this.viewportSaveTimer);
+    this.viewportSaveTimer = setTimeout(() => {
+      this.projectManager.updateProjectViewport(projectId, viewport);
+    }, 400);
   }
 
   zoomBy(delta, centerX, centerY) {
@@ -396,10 +434,11 @@ export class State {
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     this.nodes.forEach(n => {
+      const size = (this.measureNode && this.measureNode(n)) || { width: 240, height: 90 };
       minX = Math.min(minX, n.x);
       minY = Math.min(minY, n.y);
-      maxX = Math.max(maxX, n.x + 240);
-      maxY = Math.max(maxY, n.y + 120);
+      maxX = Math.max(maxX, n.x + size.width);
+      maxY = Math.max(maxY, n.y + size.height);
     });
     this.notes.forEach(n => {
       minX = Math.min(minX, n.x);
@@ -408,14 +447,18 @@ export class State {
       maxY = Math.max(maxY, n.y + n.height);
     });
 
-    const contentWidth = maxX - minX + 160;
-    const contentHeight = maxY - minY + 160;
+    const contentWidth = maxX - minX + 120;
+    const contentHeight = maxY - minY + 200; // room for the bottom dock
     const scaleX = containerWidth / contentWidth;
     const scaleY = containerHeight / contentHeight;
-    const zoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.4), 1.2);
+    // Never shrink below a readable size; large flows start left-aligned and can be panned
+    const zoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.7), 1);
 
-    const x = (containerWidth - (maxX - minX) * zoom) / 2 - minX * zoom;
-    const y = (containerHeight - (maxY - minY) * zoom) / 2 - minY * zoom;
+    const fitsX = (maxX - minX) * zoom + 120 <= containerWidth;
+    const x = fitsX
+      ? (containerWidth - (maxX - minX) * zoom) / 2 - minX * zoom
+      : 60 - minX * zoom;
+    const y = Math.max((containerHeight - 80 - (maxY - minY) * zoom) / 2, 40) - minY * zoom;
 
     this.setViewport(x, y, zoom);
   }

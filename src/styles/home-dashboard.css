@@ -320,3 +320,135 @@
   font-size: 32px;
   margin-bottom: 12px;
 }
+
+/* ---------- Visual refresh (overrides above) ---------- */
+.dashboard-header,
+.dashboard-sidebar {
+  background: var(--bg-dark);
+}
+.dashboard-header { height: 58px; padding: 0 24px; }
+.dashboard-logo { font-size: 17px; letter-spacing: -0.02em; }
+.dashboard-logo svg {
+  fill: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--ai-gradient);
+}
+.dashboard-sidebar { width: 232px; padding: 20px 12px; gap: 2px; }
+.sidebar-menu-item { padding: 9px 12px; font-size: 14px; gap: 10px; }
+.sidebar-menu-item.active {
+  background: rgba(129, 140, 248, 0.14);
+  color: var(--primary-light);
+}
+.sidebar-menu-icon { display: flex; }
+.sidebar-menu-icon svg { width: 17px; height: 17px; }
+
+.dashboard-body { padding: 40px 48px; }
+.dashboard-section-title { font-size: 22px; letter-spacing: -0.02em; }
+.project-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+
+.dash-card {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+.dash-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.dash-card-preview {
+  height: 140px;
+  background:
+    radial-gradient(circle, var(--border-subtle) 1px, transparent 1px) 0 0 / 14px 14px,
+    var(--bg-canvas);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dash-card-preview svg { width: 100%; height: 100%; }
+.pv-edge { fill: none; stroke: var(--text-muted); stroke-width: 4; opacity: 0.6; }
+.pv-node { fill: var(--node-fill); stroke-width: 5; }
+.dash-card-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.dash-card-preview-empty svg { width: 22px; height: 22px; }
+
+.dash-card-info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.dash-card-title { font-size: 15px; }
+.dash-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.dash-card-kind { display: inline-flex; align-items: center; gap: 4px; color: var(--primary-light); font-weight: 500; }
+.dash-card-kind.timeline { color: #34d399; }
+.dash-card-kind svg { width: 13px; height: 13px; }
+
+.dash-card-actions {
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dash-card:hover .dash-card-actions { opacity: 1; }
+.dash-card-del-btn,
+.dash-card-menu-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-secondary) !important;
+  opacity: 1;
+}
+.dash-card-del-btn:hover { color: #ef4444 !important; }
+.dash-card-menu-btn:hover { color: var(--text-primary) !important; }
+.dash-card-del-btn svg,
+.dash-card-menu-btn svg { width: 15px; height: 15px; }
+
+.dash-card.create-new {
+  min-height: 218px;
+  gap: 10px;
+  border: 1.5px dashed var(--border-medium);
+  font-size: 14px;
+  font-weight: 500;
+}
+.create-new-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(129, 140, 248, 0.14);
+  color: var(--primary-light);
+}
+.dash-card.create-new:hover { color: var(--primary-light); border-color: var(--primary); }
+
+.dash-trash-actions { display: flex; gap: 6px; margin-top: 6px; }
+.dash-trash-actions button { font-size: 12px; padding: 4px 10px; }
+.dash-trash-actions .btn-hard-delete { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
+
+.dash-context-item svg { width: 14px; height: 14px; }
+.mode-card-icon { display: flex; justify-content: center; color: var(--primary-light); }
+.mode-card-icon.timeline { color: #34d399; }
+.mode-card-icon svg { width: 30px; height: 30px; }

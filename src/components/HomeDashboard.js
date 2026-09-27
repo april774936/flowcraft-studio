@@ -28,17 +28,17 @@ export class HomeDashboard {
         <!-- Sidebar Navigation -->
         <aside class="dashboard-sidebar">
           <div class="sidebar-menu-item active" data-view="projects">
-            <span class="sidebar-menu-icon">🗂️</span> 내 프로젝트
+            <span class="sidebar-menu-icon">${Icons.folder}</span> 내 프로젝트
           </div>
           <div class="sidebar-menu-item" data-view="memory">
-            <span class="sidebar-menu-icon">🧠</span> 메모리(에셋)
+            <span class="sidebar-menu-icon">${Icons.stickyNote}</span> 메모리(에셋)
           </div>
           <div class="sidebar-menu-item" data-view="trash">
-            <span class="sidebar-menu-icon">🗑️</span> 휴지통
+            <span class="sidebar-menu-icon">${Icons.trash2}</span> 휴지통
           </div>
           <div style="flex: 1;"></div>
           <div class="sidebar-menu-item" data-view="settings">
-            <span class="sidebar-menu-icon">⚙️</span> 환경설정
+            <span class="sidebar-menu-icon">${Icons.settings}</span> 환경설정
           </div>
         </aside>
 
@@ -88,9 +88,9 @@ export class HomeDashboard {
 
       <!-- Context Menu -->
       <div class="dash-context-menu" id="dash-context-menu">
-        <div class="dash-context-item" id="ctx-rename">✏️ 이름 변경</div>
-        <div class="dash-context-item" id="ctx-duplicate">📋 복제하기</div>
-        <div class="dash-context-item danger" id="ctx-delete">🗑️ 휴지통으로 이동</div>
+        <div class="dash-context-item" id="ctx-rename">${Icons.edit} 이름 변경</div>
+        <div class="dash-context-item" id="ctx-duplicate">${Icons.copy} 복제하기</div>
+        <div class="dash-context-item danger" id="ctx-delete">${Icons.trash2} 휴지통으로 이동</div>
       </div>
 
       <!-- Create Project Modal -->
@@ -106,12 +106,12 @@ export class HomeDashboard {
           <label class="form-label">보드 종류 선택</label>
           <div class="mode-selector">
             <div class="mode-card selected" id="mode-flowchart" data-mode="flowchart">
-              <div class="mode-card-icon">🔀</div>
+              <div class="mode-card-icon">${Icons.workflow}</div>
               <div style="font-weight: 600; margin-bottom: 4px;">자유 배치 보드</div>
               <div style="font-size: 12px; color: var(--text-muted);">플로우차트, 순서도 및 자유로운 다이어그램 작성에 적합합니다.</div>
             </div>
             <div class="mode-card" id="mode-timeline" data-mode="timeline">
-              <div class="mode-card-icon">⏱️</div>
+              <div class="mode-card-icon timeline">${Icons.timeline}</div>
               <div style="font-weight: 600; margin-bottom: 4px;">타임라인 보드</div>
               <div style="font-size: 12px; color: var(--text-muted);">가로형 시간축을 바탕으로 진행되는 로드맵이나 일정 관리에 적합합니다.</div>
             </div>
@@ -141,8 +141,8 @@ export class HomeDashboard {
     
     grid.innerHTML = `
       <div class="dash-card create-new" id="dash-btn-new">
-        <div class="dash-card-icon" style="background: transparent; border: 2px solid currentColor; border-radius: 50%; font-size: 24px; margin-bottom: 8px;">+</div>
-        <div>새 프로젝트 생성</div>
+        <div class="create-new-icon">${Icons.plus}</div>
+        <div>새 프로젝트</div>
       </div>
     `;
 
@@ -152,20 +152,22 @@ export class HomeDashboard {
       const card = document.createElement('div');
       card.className = 'dash-card';
       
-      const updatedStr = new Date(proj.updatedAt || proj.createdAt).toLocaleDateString();
-      
+      const nodeCount = (proj.nodes || []).length;
+
       card.innerHTML = `
-        <div class="dash-card-icon ${isTimeline ? 'timeline' : ''}">
-          ${isTimeline ? '⏱️' : Icons.workflow}
+        <div class="dash-card-preview">${this.renderPreview(proj)}</div>
+        <div class="dash-card-info">
+          <div class="dash-card-title" title="${this.escapeHtml(proj.name)}">${this.escapeHtml(proj.name)}</div>
+          <div class="dash-card-meta">
+            <span class="dash-card-kind ${isTimeline ? 'timeline' : ''}">${isTimeline ? Icons.timeline : Icons.workflow}${isTimeline ? '타임라인' : '플로우차트'}</span>
+            <span>노드 ${nodeCount}개</span>
+            <span>${this.formatRelative(proj.updatedAt || proj.createdAt)}</span>
+          </div>
         </div>
-        <div class="dash-card-title" title="${this.escapeHtml(proj.name)}">${this.escapeHtml(proj.name)}</div>
-        <div class="dash-card-meta">
-          ${isTimeline ? '타임라인' : '플로우차트'} • 수정일: ${updatedStr}
-        </div>
-        
+
         <div class="dash-card-actions">
-          <button class="dash-card-del-btn" title="삭제" style="color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px;">🗑️</button>
-          <button class="dash-card-menu-btn" title="옵션 메뉴">⋮</button>
+          <button class="dash-card-del-btn" title="휴지통으로 이동">${Icons.trash2}</button>
+          <button class="dash-card-menu-btn" title="옵션 메뉴">${Icons.moreVertical}</button>
         </div>
       `;
 
@@ -187,8 +189,8 @@ export class HomeDashboard {
             if (wasActive) {
               this.state.loadActiveProject();
             }
-            this.renderRecents();
-            this.renderTrash();
+            this.renderProjectList();
+            this.renderTrashList();
           }
         });
       }
@@ -211,6 +213,55 @@ export class HomeDashboard {
     });
   }
 
+  // Miniature of the flow for the project card
+  renderPreview(proj) {
+    const nodes = proj.nodes || [];
+    if (nodes.length === 0) {
+      return `<div class="dash-card-preview-empty">${Icons.workflow}<span>빈 캔버스</span></div>`;
+    }
+    const size = (n) => n.type === 'condition' ? [200, 120]
+      : (n.type === 'start' || n.type === 'end') ? [170, 48] : [240, 84];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach(n => {
+      const [w, h] = size(n);
+      minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+      maxX = Math.max(maxX, n.x + w); maxY = Math.max(maxY, n.y + h);
+    });
+    const pad = 40;
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const center = (n) => { const [w, h] = size(n); return [n.x + w / 2, n.y + h / 2]; };
+    const edges = (proj.edges || []).map(e => {
+      const a = byId.get(e.from), b = byId.get(e.to);
+      if (!a || !b) return '';
+      const [x1, y1] = center(a), [x2, y2] = center(b);
+      return `<path d="M${x1} ${y1} H${(x1 + x2) / 2} V${y2} H${x2}" class="pv-edge"/>`;
+    }).join('');
+    const shapes = nodes.map(n => {
+      const [w, h] = size(n);
+      const c = /^#[0-9a-f]{3,8}$/i.test(n.color || '') ? n.color : '#3b82f6';
+      if (n.type === 'condition') {
+        return `<path d="M${n.x + w / 2} ${n.y} L${n.x + w} ${n.y + h / 2} L${n.x + w / 2} ${n.y + h} L${n.x} ${n.y + h / 2} Z" class="pv-node" style="stroke:${c}"/>`;
+      }
+      const r = (n.type === 'start' || n.type === 'end') ? h / 2 : 8;
+      return `<rect x="${n.x}" y="${n.y}" width="${w}" height="${h}" rx="${r}" class="pv-node" style="stroke:${c}"/>`;
+    }).join('');
+    return `<svg viewBox="${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}" preserveAspectRatio="xMidYMid meet">${edges}${shapes}</svg>`;
+  }
+
+  formatRelative(iso) {
+    const t = Date.parse(iso);
+    if (!t) return '';
+    const diff = Date.now() - t;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return '방금 전';
+    if (min < 60) return `${min}분 전`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}시간 전`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}일 전`;
+    return new Date(t).toLocaleDateString();
+  }
+
   renderTrashList() {
     const grid = document.getElementById('dash-trash-grid');
     if (!grid) return;
@@ -230,13 +281,14 @@ export class HomeDashboard {
       const updatedStr = new Date(proj.updatedAt || proj.createdAt).toLocaleDateString();
       
       card.innerHTML = `
-        <div class="dash-card-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">🗑️</div>
-        <div class="dash-card-title" title="${this.escapeHtml(proj.name)}">${this.escapeHtml(proj.name)}</div>
-        <div class="dash-card-meta">삭제됨 • ${updatedStr}</div>
-        
-        <div class="dash-card-actions" style="opacity: 1; top: auto; bottom: 12px;">
-          <button class="btn-secondary btn-restore" style="font-size: 11px; padding: 2px 8px;">복원</button>
-          <button class="btn-secondary btn-hard-delete" style="font-size: 11px; padding: 2px 8px; color: #ef4444; border-color: rgba(239,68,68,0.3);">영구 삭제</button>
+        <div class="dash-card-preview">${this.renderPreview(proj)}</div>
+        <div class="dash-card-info">
+          <div class="dash-card-title" title="${this.escapeHtml(proj.name)}">${this.escapeHtml(proj.name)}</div>
+          <div class="dash-card-meta"><span>삭제됨 · ${updatedStr}</span></div>
+          <div class="dash-trash-actions">
+            <button class="btn-secondary btn-restore">복원</button>
+            <button class="btn-secondary btn-hard-delete">영구 삭제</button>
+          </div>
         </div>
       `;
 

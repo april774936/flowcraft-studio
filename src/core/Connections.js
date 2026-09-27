@@ -12,15 +12,22 @@ export class Connections {
 
   // Get accurate port coordinates based on node shape
   getPortCoordinates(node, port) {
-    let width = 220;
-    let height = 88;
+    let width = 240;
+    let height = 72;
 
     if (node.type === 'start' || node.type === 'end') {
       width = 180;
-      height = 54;
+      height = 48;
     } else if (node.type === 'condition') {
-      width = 160;
-      height = 110;
+      width = 200;
+      height = 120;
+    }
+
+    // Prefer the rendered size (nodes grow with their text)
+    const el = document.querySelector(`[data-node-id="${node.id}"]`);
+    if (el && el.offsetWidth) {
+      width = el.offsetWidth;
+      height = el.offsetHeight;
     }
 
     const nx = node.x;
@@ -147,9 +154,38 @@ export class Connections {
     return this.createOrthogonalPathD(p1, p2, fromPort, toPort);
   }
 
+  // Node bounding box in world coordinates (rendered size when available)
+  getNodeRect(node) {
+    const tl = this.getPortCoordinates(node, 'left');
+    const br = this.getPortCoordinates(node, 'right');
+    const bottom = this.getPortCoordinates(node, 'bottom');
+    return { x: node.x, y: node.y, w: br.x - tl.x, h: bottom.y - node.y };
+  }
+
+  // Put the label on the path where it covers no node and no other label:
+  // try the middle first, then walk outwards along the edge.
+  placeLabel(pathEl, w, h, obstacles) {
+    let len = 0;
+    try { len = pathEl.getTotalLength(); } catch (e) { /* not rendered */ }
+    if (!len) return null;
+    const pad = 4;
+    const hits = (cx, cy) => obstacles.some(o =>
+      cx - w / 2 - pad < o.x + o.w && cx + w / 2 + pad > o.x &&
+      cy - h / 2 - pad < o.y + o.h && cy + h / 2 + pad > o.y);
+    const ts = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.12, 0.88];
+    for (const t of ts) {
+      const p = pathEl.getPointAtLength(len * t);
+      if (!hits(p.x, p.y)) return { x: p.x, y: p.y };
+    }
+    const mid = pathEl.getPointAtLength(len / 2);
+    return { x: mid.x, y: mid.y };
+  }
+
   renderEdges() {
     this.edgesGroup.innerHTML = '';
     const nodeMap = new Map(this.state.nodes.map(n => [n.id, n]));
+    // Obstacles for label placement: every node, plus labels as they get placed
+    const obstacles = this.state.nodes.map(n => this.getNodeRect(n));
 
     this.state.edges.forEach(edge => {
       const fromNode = nodeMap.get(edge.from);
@@ -198,32 +234,37 @@ export class Connections {
 
       g.appendChild(hitPath);
       g.appendChild(visiblePath);
+      // Attach now so the path can be measured for label placement
+      this.edgesGroup.appendChild(g);
 
       // Edge Label
       if (edge.label) {
-        const midX = (p1.x + p2.x) / 2;
-        const midY = (p1.y + p2.y) / 2;
-
         const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         labelGroup.setAttribute('class', 'edge-label-group');
 
-        const labelWidth = Math.max(64, edge.label.length * 11 + 24);
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', midX - labelWidth / 2);
-        rect.setAttribute('y', midY - 14);
-        rect.setAttribute('width', labelWidth);
-        rect.setAttribute('height', 28);
-        rect.setAttribute('class', 'edge-label-bg');
-
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', midX);
-        text.setAttribute('y', midY);
         text.setAttribute('class', 'edge-label-text');
         text.textContent = edge.label;
-
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('class', 'edge-label-bg');
         labelGroup.appendChild(rect);
         labelGroup.appendChild(text);
         g.appendChild(labelGroup);
+
+        let textWidth = 0;
+        try { textWidth = text.getComputedTextLength(); } catch (e) { /* not rendered */ }
+        const labelWidth = Math.max(36, (textWidth || edge.label.length * 8) + 16);
+        const labelHeight = 22;
+        const pos = this.placeLabel(visiblePath, labelWidth, labelHeight, obstacles)
+          || { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+        rect.setAttribute('x', pos.x - labelWidth / 2);
+        rect.setAttribute('y', pos.y - labelHeight / 2);
+        rect.setAttribute('width', labelWidth);
+        rect.setAttribute('height', labelHeight);
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y);
+        obstacles.push({ x: pos.x - labelWidth / 2, y: pos.y - labelHeight / 2, w: labelWidth, h: labelHeight });
       }
 
       // Edge Selection
@@ -231,8 +272,6 @@ export class Connections {
         e.stopPropagation();
         this.state.selectEdge(edge.id);
       });
-
-      this.edgesGroup.appendChild(g);
     });
   }
 
