@@ -25,7 +25,7 @@
 | **passmaster** | CFA L1(+투운사 예정) 문제풀이 | Vercel | https://passmaster-cfa.vercel.app |
 | **leet_master** | LEET 기출문제 풀이 | GitHub Pages | https://april774936.github.io/leet_master/ |
 | **bokwatch** | 한국은행 금리결정 확률모델 | GitHub Pages + Actions | https://april774936.github.io/bokwatch/ |
-| **report-hub** | 기관 리포트 수집·알림 대시보드 | 맥미니 자체호스팅 + Tailscale Funnel | https://mac.tailb8f721.ts.net:8443 |
+| **report-hub** | 기관 리포트 수집·알림 대시보드 | Vercel(서빙) + 맥미니(크롤링) | https://report-hub-pied.vercel.app |
 
 GitHub 계정: `april774936` (전부 이 계정, Vercel도 동일 계정 연동).
 
@@ -52,8 +52,10 @@ GitHub 계정: `april774936` (전부 이 계정, Vercel도 동일 계정 연동)
 - ★ 확률 로직에 인하-클램프/단조(isotonic) 강제를 넣지 말 것 — 사용자가 명시적으로 금지한 사항. raw curve가 역전돼 이상한 확률이 나와도 그대로 둔다.
 
 ### report-hub
-- **2026-09-27, Claude가 방금 두 가지 완료**: (1) Google News 링크 디코딩 + 스크래핑 + Gemini 폴백 3단계로 PDF 실링크를 찾아 인앱 iframe에서 바로 열람 가능하게 구현, (2) Tailscale Funnel로 외부 공개(`https://mac.tailb8f721.ts.net:8443`).
-- 맥미니가 꺼지거나 잠들면 서비스 전체가 죽는다 — 클라우드 배포가 아니라 순수 로컬 상시 프로세스. `setup-launchd.sh`로 로그인 시 자동시작 등록 가능하게 만들어뒀는데 실제 적용/동작 여부는 미확인.
+- **2026-09-27, 아키텍처 변경 완료**: 크롤링/수집은 계속 맥미니에서만 돌리고(기관 사이트 IP 차단 회피 목적), 서빙(대시보드+API)은 Supabase+Vercel로 분리 이전함. 맥미니가 꺼지거나 잠들어도 사이트(`https://report-hub-pied.vercel.app`)는 항상 뜨고 "새 데이터 업데이트만 멈춘 상태"가 됨(다른 4개 프로젝트와 같은 Supabase 패턴). 자세한 건 `report-hub/HANDOFF.md` 참고.
+- 이관 완료: `/api/reports`, `/api/institutions`, `/api/trending-tags`, `/api/pdf-proxy`, `/api/user-state`(북마크·읽음 상태도 이제 기기간 동기화됨). 이관 안 함(맥 전용, Vercel에선 404지만 프론트가 감싸서 무해): 텔레그램 설정, 수동 새로고침, SSE 실시간 알림.
+- 구 Tailscale Funnel(`https://mac.tailb8f721.ts.net:8443`)은 이제 메인 접속 경로가 아님 — 맥 전용 기능(텔레그램 설정 등) 쓸 때만 필요. 유지할지 해지할지는 사용자 미결 상태.
+- Google News 링크 디코딩 + 스크래핑 + Gemini 폴백 3단계로 PDF 실링크를 찾아 인앱 iframe에서 바로 열람 가능(2026-09-27 구현 완료, 변동 없음).
 - `.env`의 `GEMINI_API_KEY`는 과거 한 번 채팅에 유출돼서 폐기하고 재발급한 이력 있음 — 절대 커밋하거나 아무 데도 노출하지 마라.
 
 ---
