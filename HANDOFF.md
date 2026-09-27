@@ -11,7 +11,7 @@
 | **passmaster** (`passmaster/`) | CFA L1 등 자격시험 문제풀이 | Vercel | https://passmaster-cfa.vercel.app |
 | **leet_master** (`leet_master/`) | LEET 기출문제 풀이 | GitHub Pages | https://april774936.github.io/leet_master/ |
 | **bokwatch** (`bokwatch/`) | 한국은행 금리결정 확률모델 | GitHub Pages + GitHub Actions | https://april774936.github.io/bokwatch/ |
-| **report-hub** (`report-hub/`) | 기관 리포트 수집·알림 대시보드 | 맥미니 자체 호스팅 + Tailscale Funnel | https://mac.tailb8f721.ts.net:8443 |
+| **report-hub** (`report-hub/`) | 기관 리포트 수집·알림 대시보드 | Vercel(서빙)+맥미니(크롤링) | https://report-hub-pied.vercel.app |
 
 GitHub 계정: april774936 (전부 이 계정 소유, Vercel도 동일 계정 연동)
 
