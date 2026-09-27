@@ -130,16 +130,19 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboard.open();
   });
 
-  document.getElementById('btn-settings')?.addEventListener('click', () => {
-    alert('설정 기능은 현재 준비 중입니다.');
-  });
-
   document.getElementById('bg-color-picker')?.addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--bg-canvas', e.target.value);
   });
-  document.getElementById('btn-close-inspector')?.addEventListener('click', () => {
-    appInspector.style.display = appInspector.style.display === 'none' ? 'flex' : 'none';
-  });
+  // Inspector opens when something is selected and gets out of the way otherwise
+  const appBody = document.querySelector('.app-body');
+  const inspectorToggle = document.getElementById('btn-toggle-inspector');
+  const setInspectorOpen = (open) => {
+    appBody?.classList.toggle('inspector-collapsed', !open);
+    if (inspectorToggle) inspectorToggle.textContent = open ? '▶' : '◀';
+  };
+  setInspectorOpen(false);
+  state.on('selection:change', (sel) => setInspectorOpen(sel && sel.type !== 'none'));
+  document.getElementById('btn-close-inspector')?.addEventListener('click', () => setInspectorOpen(false));
 
   // 9. Minimap
   const minimapContainer = document.getElementById('minimap-container');
@@ -150,11 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // 10. Top Header Toolbar (project switching is handled by the Home Dashboard)
   const toolbar = new Toolbar(state, dashboard, aiModal, simulator, canvas, aiEngine);
 
-  // Center initial view if needed
-  setTimeout(() => {
+  // Fit the flow to the screen whenever a project is opened
+  const fitView = () => requestAnimationFrame(() => {
     const rect = container.getBoundingClientRect();
     state.fitToContent(rect.width, rect.height);
-  }, 100);
+  });
+  state.on('project:loaded', fitView);
+  fitView();
 
   console.log('✨ FlowCraft Studio initialized successfully.');
 });

@@ -29,6 +29,8 @@ export class Toolbar {
   initIcons() {
     // Populate header icons
     document.getElementById('logo-icon').innerHTML = Icons.workflow;
+    const homeIcon = document.getElementById('home-icon');
+    if (homeIcon) homeIcon.innerHTML = Icons.home;
     document.getElementById('project-icon-wrapper').innerHTML = Icons.folder;
     document.getElementById('project-chevron-wrapper').innerHTML = Icons.chevronDown;
     document.getElementById('ai-btn-icon').innerHTML = Icons.sparkles;

@@ -40,6 +40,11 @@ export class NodeRenderer {
 
     this.dragNodesState = null;
 
+    this.state.measureNode = (node) => {
+      const el = this.layer.querySelector(`[data-node-id="${node.id}"]`);
+      return el && el.offsetWidth ? { width: el.offsetWidth, height: el.offsetHeight } : null;
+    };
+
     this.initWindowEvents();
     this.render();
 

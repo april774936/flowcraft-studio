@@ -208,3 +208,67 @@
   color: var(--primary-light);
   transform: translateX(2px);
 }
+
+/* ---------- Header layout: never wrap labels; collapse to icons on narrower screens ---------- */
+.app-header button,
+.app-header .btn-label,
+.dock-btn,
+.dock-btn .btn-label,
+.simulator-title {
+  white-space: nowrap;
+}
+.app-header button,
+.header-left,
+.header-right,
+.action-pill-group,
+.zoom-controls,
+.dock-btn {
+  flex-shrink: 0;
+}
+.header-left { min-width: 0; flex-shrink: 1; }
+.header-center { flex-shrink: 0; }
+.app-header button svg { flex-shrink: 0; }
+
+#btn-go-home { padding: 7px; }
+.project-selector-btn { max-width: 220px; }
+
+.color-swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0 4px;
+  position: relative;
+}
+.color-swatch-btn input {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 1680px) {
+  #btn-ai-copilot-toggle .btn-label,
+  #btn-add-note .btn-label,
+  #btn-auto-layout .btn-label,
+  #btn-export-toggle .btn-label {
+    display: none;
+  }
+}
+@media (max-width: 1360px) {
+  .header-center .btn-label,
+  .logo-area span { display: none; }
+  .app-header { padding: 0 12px; gap: 8px; }
+  .header-left, .header-center, .header-right { gap: 6px; }
+  .project-selector-btn { max-width: 180px; }
+}
+@media (max-width: 1400px) {
+  .dock-btn .btn-label { display: none; }
+  .dock-btn { padding: 8px 10px; }
+}

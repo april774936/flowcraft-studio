@@ -434,10 +434,11 @@ export class State {
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     this.nodes.forEach(n => {
+      const size = (this.measureNode && this.measureNode(n)) || { width: 240, height: 90 };
       minX = Math.min(minX, n.x);
       minY = Math.min(minY, n.y);
-      maxX = Math.max(maxX, n.x + 240);
-      maxY = Math.max(maxY, n.y + 120);
+      maxX = Math.max(maxX, n.x + size.width);
+      maxY = Math.max(maxY, n.y + size.height);
     });
     this.notes.forEach(n => {
       minX = Math.min(minX, n.x);
@@ -446,14 +447,18 @@ export class State {
       maxY = Math.max(maxY, n.y + n.height);
     });
 
-    const contentWidth = maxX - minX + 160;
-    const contentHeight = maxY - minY + 160;
+    const contentWidth = maxX - minX + 120;
+    const contentHeight = maxY - minY + 200; // room for the bottom dock
     const scaleX = containerWidth / contentWidth;
     const scaleY = containerHeight / contentHeight;
-    const zoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.4), 1.2);
+    // Never shrink below a readable size; large flows start left-aligned and can be panned
+    const zoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.7), 1);
 
-    const x = (containerWidth - (maxX - minX) * zoom) / 2 - minX * zoom;
-    const y = (containerHeight - (maxY - minY) * zoom) / 2 - minY * zoom;
+    const fitsX = (maxX - minX) * zoom + 120 <= containerWidth;
+    const x = fitsX
+      ? (containerWidth - (maxX - minX) * zoom) / 2 - minX * zoom
+      : 60 - minX * zoom;
+    const y = Math.max((containerHeight - 80 - (maxY - minY) * zoom) / 2, 40) - minY * zoom;
 
     this.setViewport(x, y, zoom);
   }

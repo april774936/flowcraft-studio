@@ -135,8 +135,8 @@
 
 .edge-label-text {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   fill: var(--text-primary);
   text-anchor: middle;
   dominant-baseline: central;
@@ -195,10 +195,10 @@
   box-shadow: 0 0 8px var(--primary-glow);
 }
 
-/* Minimap container */
+/* Minimap container (sits above the fixed sync badge) */
 .minimap-container {
   position: absolute;
-  bottom: 20px;
+  bottom: 56px;
   right: 20px;
   width: 190px;
   height: 125px;
@@ -418,3 +418,7 @@
 .app-body.inspector-collapsed .inspector-collapse-toggle {
   right: 0;
 }
+
+/* Keep the dock and minimap above the run console when it is open */
+.canvas-container:has(.simulator-drawer.active) .canvas-floating-dock { bottom: 216px; }
+.canvas-container:has(.simulator-drawer.active) .minimap-container { opacity: 0; pointer-events: none; }

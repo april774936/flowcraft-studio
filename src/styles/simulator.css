@@ -2,8 +2,8 @@
 .simulator-drawer {
   position: absolute;
   bottom: 0;
-  left: var(--sidebar-width);
-  right: var(--inspector-width);
+  left: 0;
+  right: 0;
   height: 200px;
   background: var(--bg-surface);
   border-top: 1px solid var(--border-medium);
