@@ -1,5 +1,6 @@
 // Palette.js: Left sidebar node library, categorized drag-and-drop items, and templates
 import { getIcon } from '../utils/icons.js';
+import { getNodeShape, SHAPE_PATHS } from './NodeRenderer.js';
 
 export const NodeLibrary = [
   {
@@ -227,9 +228,12 @@ export class Palette {
         itemEl.className = 'palette-item';
         itemEl.draggable = true;
 
+        // Mini version of the node's flowchart shape, so the palette matches the canvas
+        const shape = item.type === 'note' ? 'note' : getNodeShape(item);
         itemEl.innerHTML = `
-          <div class="palette-item-icon" style="background: ${item.color}20; color: ${item.color};">
-            ${getIcon(item.icon, item.type)}
+          <div class="palette-item-icon shape-${shape}" style="--accent: ${item.color}; color: ${item.color};">
+            ${SHAPE_PATHS[shape] ? `<svg class="palette-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${SHAPE_PATHS[shape]}</svg>` : ''}
+            <span class="palette-glyph">${getIcon(item.icon, item.type)}</span>
           </div>
           <div class="palette-item-info">
             <div class="palette-item-name">${item.title}</div>

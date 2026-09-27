@@ -66,31 +66,43 @@ export class AutoLayout {
       layers.push(unvisited);
     }
 
-    // 3. Compute coordinates based on layer rank
+    // 3. Compute coordinates from the rendered node sizes, leaving room for edge labels
+    const size = (n) => (state.measureNode && state.measureNode(n)) || { width: 240, height: 90 };
     const startX = 100;
-    const startY = 140;
-    const spacingX = 300; // Node width ~220 + 80 gap
-    const spacingY = 160; // Node height ~90 + 70 gap
+    const centerY = 300;
+    const gapX = 150; // fits an edge label between columns
+    const gapY = 70;
 
-    layers.forEach((layer, layerIndex) => {
-      const layerCount = layer.length;
-      const totalHeight = (layerCount - 1) * spacingY;
-      const layerStartY = startY - totalHeight / 2 + 100;
-
-      layer.forEach((nodeId, nodeIndex) => {
-        const node = nodeMap.get(nodeId);
-        if (node) {
-          if (direction === 'horizontal') {
-            node.x = Math.round(startX + layerIndex * spacingX);
-            node.y = Math.round(layerStartY + nodeIndex * spacingY);
-          } else {
-            // Vertical layout
-            node.x = Math.round(startX + nodeIndex * spacingX);
-            node.y = Math.round(startY + layerIndex * spacingY);
-          }
-        }
+    if (direction === 'horizontal') {
+      let x = startX;
+      layers.forEach(layer => {
+        const layerNodes = layer.map(id => nodeMap.get(id)).filter(Boolean);
+        const colWidth = Math.max(...layerNodes.map(n => size(n).width));
+        const totalHeight = layerNodes.reduce((sum, n) => sum + size(n).height, 0) + gapY * (layerNodes.length - 1);
+        let y = centerY - totalHeight / 2;
+        layerNodes.forEach(n => {
+          const s = size(n);
+          n.x = Math.round(x + (colWidth - s.width) / 2);
+          n.y = Math.round(y);
+          y += s.height + gapY;
+        });
+        x += colWidth + gapX;
       });
-    });
+    } else {
+      let y = 140;
+      layers.forEach(layer => {
+        const layerNodes = layer.map(id => nodeMap.get(id)).filter(Boolean);
+        const rowHeight = Math.max(...layerNodes.map(n => size(n).height));
+        let x = startX;
+        layerNodes.forEach(n => {
+          const s = size(n);
+          n.x = Math.round(x);
+          n.y = Math.round(y + (rowHeight - s.height) / 2);
+          x += s.width + gapX;
+        });
+        y += rowHeight + 110;
+      });
+    }
 
     state.save();
     state.emit('canvas:change');

@@ -5,7 +5,7 @@ import { soundFx } from '../utils/audio.js';
 // Node shape = flowchart symbol, so node kinds are told apart by outline, not color.
 // Shapes drawn with SVG are stretched to the node box (non-scaling stroke keeps lines crisp);
 // 'terminal' and 'process' are plain CSS boxes.
-const SHAPE_PATHS = {
+export const SHAPE_PATHS = {
   decision: '<path d="M50 1 L99 50 L50 99 L1 50 Z"/>',
   manual: '<path d="M1 1 H99 L91 99 H9 Z"/>',
   document: '<path d="M1 1 H99 V84 C80 76 66 104 42 94 C26 88 12 86 1 92 Z"/>',

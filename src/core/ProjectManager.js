@@ -206,8 +206,8 @@ export class ProjectManager {
         notes: [
           {
             id: 'note_1',
-            x: 80,
-            y: 40,
+            x: 40,
+            y: 20,
             width: 240,
             height: 140,
             color: 'yellow',
@@ -215,8 +215,8 @@ export class ProjectManager {
           },
           {
             id: 'note_2',
-            x: 720,
-            y: 380,
+            x: 820,
+            y: 470,
             width: 220,
             height: 120,
             color: 'pink',
@@ -232,8 +232,8 @@ export class ProjectManager {
             desc: 'PG사 결제 승인 Webhook 수신',
             icon: 'trigger',
             color: '#10b981',
-            x: 120,
-            y: 220,
+            x: 40,
+            y: 251,
             status: 'idle',
             memo: 'PG사 웹훅 시그니처 검증 토큰 확인 필수'
           },
@@ -245,7 +245,7 @@ export class ProjectManager {
             desc: 'ERP 시스템 실시간 재고 수량 조회',
             icon: 'database',
             color: '#3b82f6',
-            x: 380,
+            x: 390,
             y: 220,
             status: 'idle',
             memo: '재고 잠금(Lock) 처리를 위해 격리 레벨 확인'
@@ -258,8 +258,8 @@ export class ProjectManager {
             desc: '주문 수량 <= 현재 가용 재고',
             icon: 'condition',
             color: '#8b5cf6',
-            x: 640,
-            y: 220,
+            x: 780,
+            y: 213,
             status: 'idle',
             memo: 'False인 경우 자동으로 품절 취소 API로 분기'
           },
@@ -271,8 +271,8 @@ export class ProjectManager {
             desc: 'CJ대한통운 물류 API 호출 및 바코드 출력',
             icon: 'api',
             color: '#3b82f6',
-            x: 940,
-            y: 150,
+            x: 1150,
+            y: 60,
             status: 'idle',
             memo: '송장 번호 생성 즉시 WMS 센터로 전송'
           },
@@ -284,8 +284,8 @@ export class ProjectManager {
             desc: '카카오 비즈메시지 & 이메일 발송',
             icon: 'message',
             color: '#f59e0b',
-            x: 1240,
-            y: 150,
+            x: 1540,
+            y: 60,
             status: 'idle',
             memo: '카카오톡 실패 시 LMS로 자동 대체 발송'
           },
@@ -297,8 +297,8 @@ export class ProjectManager {
             desc: '배송 준비 단계로 주문 상태 변경',
             icon: 'end',
             color: '#ec4899',
-            x: 1520,
-            y: 150,
+            x: 1930,
+            y: 96,
             status: 'idle',
             memo: ''
           },
@@ -310,8 +310,8 @@ export class ProjectManager {
             desc: '품절에 따른 PG 즉시 결제 승인 취소',
             icon: 'action',
             color: '#ef4444',
-            x: 940,
-            y: 330,
+            x: 1150,
+            y: 360,
             status: 'idle',
             memo: '취소 수수료 없이 원거래 전체 취소'
           },
@@ -323,8 +323,8 @@ export class ProjectManager {
             desc: '고객 환불 안내 문자 발송 후 종료',
             icon: 'end',
             color: '#ec4899',
-            x: 1240,
-            y: 330,
+            x: 1540,
+            y: 386,
             status: 'idle',
             memo: ''
           }
@@ -349,8 +349,8 @@ export class ProjectManager {
         notes: [
           {
             id: 'note_cicd',
-            x: 100,
-            y: 50,
+            x: 40,
+            y: 20,
             width: 250,
             height: 120,
             color: 'blue',
@@ -366,8 +366,8 @@ export class ProjectManager {
             desc: 'main 브랜치 PR 머지 감지',
             icon: 'webhook',
             color: '#10b981',
-            x: 120,
-            y: 200,
+            x: 40,
+            y: 231,
             status: 'idle',
             memo: 'GitHub Actions Webhook'
           },
@@ -379,7 +379,7 @@ export class ProjectManager {
             desc: 'npm test & ESLint 무결성 검증',
             icon: 'terminal',
             color: '#3b82f6',
-            x: 380,
+            x: 390,
             y: 200,
             status: 'idle',
             memo: '커버리지 80% 이상 필수'
@@ -392,7 +392,7 @@ export class ProjectManager {
             desc: '멀티스테이지 이미지 최적화 빌드',
             icon: 'action',
             color: '#3b82f6',
-            x: 640,
+            x: 780,
             y: 200,
             status: 'idle',
             memo: 'ECR 저장소로 태그 푸시'
@@ -405,7 +405,7 @@ export class ProjectManager {
             desc: 'Kubernetes 스테이징 클러스터 롤링 업데이트',
             icon: 'api',
             color: '#10b981',
-            x: 900,
+            x: 1170,
             y: 200,
             status: 'idle',
             memo: '헬스체크 200 OK 대기'
@@ -418,8 +418,8 @@ export class ProjectManager {
             desc: '#devops 채널에 성공 보고',
             icon: 'message',
             color: '#ec4899',
-            x: 1160,
-            y: 200,
+            x: 1560,
+            y: 231,
             status: 'idle',
             memo: ''
           }
