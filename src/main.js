@@ -62,6 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const aiModalOverlay = document.getElementById('ai-modal');
   const aiModal = new AIModal(state, aiEngine, aiModalOverlay, canvas);
 
+  // Keep header project name in sync with the active project
+  const headerProjectName = document.getElementById('header-project-name');
+  state.on('project:loaded', (proj) => {
+    if (headerProjectName && proj) headerProjectName.textContent = proj.name;
+  });
+
   // Initial load and open dashboard
   state.loadActiveProject();
   dashboard.open();
@@ -141,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const minimapViewport = document.getElementById('minimap-viewport');
   const minimap = new Minimap(state, minimapContainer, minimapCanvas, minimapViewport, container);
 
-  // 10. Top Header Toolbar
-  const toolbar = new Toolbar(state, projectModal, aiModal, simulator, canvas, aiEngine);
+  // 10. Top Header Toolbar (project switching is handled by the Home Dashboard)
+  const toolbar = new Toolbar(state, dashboard, aiModal, simulator, canvas, aiEngine);
 
   // Center initial view if needed
   setTimeout(() => {

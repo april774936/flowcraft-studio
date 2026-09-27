@@ -80,10 +80,6 @@ export class Toolbar {
     document.getElementById('inspector-close-icon').innerHTML = Icons.close;
 
     // Modals icons
-    document.getElementById('project-modal-icon').innerHTML = Icons.folder;
-    document.getElementById('modal-plus-icon').innerHTML = Icons.plus;
-    document.getElementById('modal-close-icon').innerHTML = Icons.close;
-    document.getElementById('project-search-icon').innerHTML = Icons.search;
 
     document.getElementById('ai-title-icon').innerHTML = Icons.sparkles;
     document.getElementById('ai-close-icon').innerHTML = Icons.close;

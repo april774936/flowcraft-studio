@@ -1,5 +1,5 @@
 // NodeRenderer.js: Flowchart ISO shape rendering, magnetic ports, and Whimsical-style [+] quick connectors
-import { getIcon } from '../utils/icons.js';
+import { Icons, getIcon } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
 
 export class NodeRenderer {
@@ -67,7 +67,6 @@ export class NodeRenderer {
           <div class="node-quick-add add-right" data-direction="right" title="Yes 분기 다음 단계 추가">+</div>
           <div class="node-quick-add add-bottom" data-direction="bottom" title="No 분기 다음 단계 추가">+</div>
         `;
-      } 
       } 
       // 3. Special Shapes (Manual Operation & Document)
       else if (node.type === 'manual' || node.type === 'document') {
