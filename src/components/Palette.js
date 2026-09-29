@@ -189,7 +189,7 @@ export class Palette {
         const name = tpl.name.replace(/^\S+\s/, '');
         if (!confirm(`'${name}' 템플릿으로 새 프로젝트를 만들까요?`)) return;
         const pm = this.state.projectManager;
-        pm.createProject(name, tpl.key, 'flowchart');
+        pm.createProject(name, tpl.key);
         this.state.loadActiveProject();
       });
 

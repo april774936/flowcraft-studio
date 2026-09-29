@@ -8,7 +8,6 @@ export class HomeDashboard {
     this.pm = projectManager;
     this.container = container;
     
-    this.selectedMode = 'flowchart';
     this.searchQuery = '';
 
     this.render();
@@ -103,20 +102,11 @@ export class HomeDashboard {
             <input type="text" id="dash-new-name" class="form-input" placeholder="새 프로젝트" />
           </div>
 
-          <label class="form-label">보드 종류 선택</label>
-          <div class="mode-selector">
-            <div class="mode-card selected" id="mode-flowchart" data-mode="flowchart">
-              <div class="mode-card-icon">${Icons.workflow}</div>
-              <div style="font-weight: 600; margin-bottom: 4px;">자유 배치 보드</div>
-              <div style="font-size: 12px; color: var(--text-muted);">플로우차트, 순서도 및 자유로운 다이어그램 작성에 적합합니다.</div>
-            </div>
-            <div class="mode-card" id="mode-timeline" data-mode="timeline">
-              <div class="mode-card-icon timeline">${Icons.timeline}</div>
-              <div style="font-weight: 600; margin-bottom: 4px;">타임라인 보드</div>
-              <div style="font-size: 12px; color: var(--text-muted);">가로형 시간축을 바탕으로 진행되는 로드맵이나 일정 관리에 적합합니다.</div>
-            </div>
-          </div>
-          
+          <label class="dash-axis-option">
+            <input type="checkbox" id="dash-new-axis" />
+            <span>가로 시간축 켜고 시작 <small>(나중에 상단 '시간축' 버튼으로 언제든 켜고 끌 수 있어요)</small></span>
+          </label>
+
           <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 32px;">
             <button class="btn-secondary" id="btn-dash-cancel">취소</button>
             <button class="btn-primary" id="btn-dash-create">생성하기</button>
@@ -148,7 +138,7 @@ export class HomeDashboard {
 
     const projects = this.pm.getProjectsList(false); // active only
     projects.forEach(proj => {
-      const isTimeline = proj.mode === 'timeline';
+      const hasAxis = !!proj.timeline || proj.mode === 'timeline';
       const card = document.createElement('div');
       card.className = 'dash-card';
       
@@ -159,7 +149,7 @@ export class HomeDashboard {
         <div class="dash-card-info">
           <div class="dash-card-title" title="${this.escapeHtml(proj.name)}">${this.escapeHtml(proj.name)}</div>
           <div class="dash-card-meta">
-            <span class="dash-card-kind ${isTimeline ? 'timeline' : ''}">${isTimeline ? Icons.timeline : Icons.workflow}${isTimeline ? '타임라인' : '플로우차트'}</span>
+            ${hasAxis ? `<span class="dash-card-kind timeline">${Icons.timeline}시간축</span>` : ''}
             <span>노드 ${nodeCount}개</span>
             <span>${this.formatRelative(proj.updatedAt || proj.createdAt)}</span>
           </div>
@@ -389,15 +379,6 @@ export class HomeDashboard {
     document.getElementById('dash-btn-theme-light')?.addEventListener('click', () => {
       document.documentElement.setAttribute('data-theme', 'light');
     });
-    // Mode Selection
-    const modeCards = this.container.querySelectorAll('.mode-card');
-    modeCards.forEach(card => {
-      card.addEventListener('click', () => {
-        modeCards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        this.selectedMode = card.dataset.mode;
-      });
-    });
 
     // Cancel Create
     const modal = document.getElementById('dash-create-modal');
@@ -408,12 +389,10 @@ export class HomeDashboard {
     // Submit Create
     document.getElementById('btn-dash-create')?.addEventListener('click', () => {
       const name = document.getElementById('dash-new-name').value.trim() || '새 프로젝트';
-      
-      // Determine template based on mode
-      const template = this.selectedMode === 'timeline' ? 'timeline_basic' : 'blank';
-      
-      this.pm.createProject(name, template, this.selectedMode);
+      const withAxis = document.getElementById('dash-new-axis')?.checked;
+      this.pm.createProject(name, 'blank');
       this.state.loadActiveProject();
+      if (withAxis) this.state.enableTimeline();
       modal.classList.remove('active');
       this.close();
     });
