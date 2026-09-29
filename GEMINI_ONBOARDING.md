@@ -35,7 +35,7 @@ GitHub 계정: `april774936` (전부 이 계정, Vercel도 동일 계정 연동)
 
 ### flowcraft-studio
 - 2026-09-27 Claude 수정: 8036ee3 이후 문법 오류로 빌드가 깨져 있었고(앱 로드 불가), 툴바는 첫 커밋부터 `projectModal` 미정의로 전부 먹통이었음 → 수정.
-- 동기화(`sync.js`)는 프로젝트 단위 병합(updatedAt 최신 우선) + 영구삭제 툼스톤(`flowcraft_deleted_project_ids`) + 조건부 쓰기(낙관적 동시성)로 재작성. viewport(화면 이동/줌)만 바뀐 건 업로드 안 함.
+- 동기화(`public/sync.js`, 2026-09-29 전까지는 루트에 있어 배포본에 빠져 있었음)는 프로젝트 단위 병합(updatedAt 최신 우선) + 영구삭제 툼스톤(`flowcraft_deleted_project_ids`) + 조건부 쓰기(낙관적 동시성)로 재작성. viewport(화면 이동/줌)만 바뀐 건 업로드 안 함.
 - 드래그/리사이즈는 제스처당 undo 1단계 (`State.beginGesture`/`endGesture`).
 - GitHub Actions `build.yml`이 push/PR마다 `vite build` 검사 — 빌드 깨진 채로 푸시하지 마라.
 - 미결: Supabase RLS 정책 미확인(동기화 코드만 알면 읽기/쓰기 가능할 수 있음), 좁은 화면에서 상단 툴바 레이아웃 깨짐, 미사용 `ProjectModal.js`.

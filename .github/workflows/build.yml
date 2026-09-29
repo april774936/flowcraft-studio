@@ -15,5 +15,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Syntax-check sync.js (not bundled by Vite)
-        run: node --check sync.js
+      - name: Sync script is shipped in the build
+        run: test -f dist/sync.js
+      - name: Syntax-check public/sync.js (not bundled by Vite)
+        run: node --check public/sync.js
