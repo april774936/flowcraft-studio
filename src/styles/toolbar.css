@@ -294,7 +294,6 @@
 .btn-advanced.on .adv-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 
 /* Simple mode (default): hide automation-only controls */
-.simple-mode #btn-ai-draft,
 .simple-mode #ai-copilot-dropdown,
 .simple-mode #btn-run-simulation,
 .simple-mode #dock-ai-sparkle,
