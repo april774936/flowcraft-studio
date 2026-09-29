@@ -158,6 +158,11 @@
           <input type="color" id="bg-color-picker" value="#1e293b" />
         </label>
 
+        <!-- Advanced (automation) features toggle -->
+        <button class="btn-advanced" id="btn-advanced-toggle" title="AI·실행 시뮬레이션·자동화 노드 표시/숨기기" aria-pressed="false">
+          <span class="adv-dot"></span><span class="btn-label">고급 기능</span>
+        </button>
+
         <!-- Sound Effects Toggle -->
         <button class="btn-icon" id="btn-sound-toggle" title="효과음 켜기/끄기">
           <span id="sound-icon"></span>
@@ -424,6 +429,30 @@
               </tr>
             </thead>
             <tbody>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Tab</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">선택한 노드 다음 단계 추가 (분기 노드면 새 갈래)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Enter</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">같은 단계(형제) 노드 추가</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">더블클릭</kbd> / <kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">F2</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">노드 이름 바로 수정 (Enter 저장 · Esc 취소 · Tab 저장 후 다음 단계)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">연결선 더블클릭</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">연결선(분기 경로) 라벨 바로 입력</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">빈 곳 더블클릭</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">그 위치에 새 단계 추가</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Ctrl/Cmd + Enter</kbd></td>
+                <td style="padding: 8px 4px; color: var(--text-secondary);">선택 노드 완료 표시 / 해제</td>
+              </tr>
               <tr style="border-bottom: 1px solid var(--border-subtle);">
                 <td style="padding: 8px 4px;"><kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">Space + 드래그</kbd> 또는 <kbd style="background:var(--bg-surface-elevated); padding:2px 6px; border-radius:4px; border:1px solid var(--border-medium);">우클릭 드래그</kbd></td>
                 <td style="padding: 8px 4px; color: var(--text-secondary);">무한 캔버스 화면 이동 (Pan)</td>

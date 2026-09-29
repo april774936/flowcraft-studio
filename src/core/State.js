@@ -187,6 +187,8 @@ export class State {
       status: 'idle',
       memo: nodeData.memo || ''
     };
+    if (nodeData.period) node.period = nodeData.period;
+    if (nodeData.progress) node.progress = nodeData.progress;
     const checklist = normalizeChecklist(nodeData.checklist);
     if (checklist.length) node.checklist = checklist;
     const branches = normalizeBranches(nodeData.branches);
@@ -317,6 +319,20 @@ export class State {
       this.save();
       this.emit('edge:updated', edge);
       this.emit('canvas:change');
+    }
+  }
+
+  // Edge label; for an edge leaving an N-way decision the label is the branch name,
+  // so the branch is renamed (keeps every edge of that branch in sync)
+  setEdgeLabel(id, label) {
+    const edge = this.edges.find(e => e.id === id);
+    if (!edge || label === (edge.label || '')) return;
+    const from = this.nodes.find(n => n.id === edge.from);
+    if (from && isBranchPort(edge.fromPort) && Array.isArray(from.branches) && label) {
+      const bid = branchIdOf(edge.fromPort);
+      this.updateBranches(from.id, from.branches.map(b => (b.id === bid ? { ...b, label } : b)));
+    } else {
+      this.updateEdge(id, { label });
     }
   }
 

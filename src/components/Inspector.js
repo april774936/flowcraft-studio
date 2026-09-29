@@ -1,6 +1,6 @@
 // Inspector.js: Right drawer properties editor and node-level documentation memo tab
 import { Icons, getIcon } from '../utils/icons.js';
-import { getNodeShape } from './NodeRenderer.js';
+import { getNodeShape, PROGRESS_STATES } from './NodeRenderer.js';
 import { legacyBranchesFor, newItemId } from '../core/Branches.js';
 
 export class Inspector {
@@ -53,7 +53,7 @@ export class Inspector {
 
   renderNodeProperties(node) {
     this.contentArea.innerHTML = `
-      <div class="inspector-section" style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <div class="inspector-section insp-ai-box" style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <label class="inspector-label" style="color: #c084fc; margin-bottom: 8px;">✨ AI Copilot 추천 액션</label>
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <button class="btn-secondary" id="insp-ai-next" style="justify-content: flex-start; background: var(--bg-surface); border-color: rgba(168,85,247,0.2);">
@@ -75,6 +75,8 @@ export class Inspector {
         <textarea class="inspector-textarea" id="inp-node-desc" placeholder="이 노드가 수행하는 작업에 대한 상세 설명">${this.escapeHtml(node.desc || '')}</textarea>
       </div>
 
+      ${this.roadmapSectionHtml(node)}
+
       ${this.structureSectionHtml(node)}
 
       <div class="inspector-section">
@@ -86,7 +88,7 @@ export class Inspector {
         </div>
       </div>
 
-      <div class="inspector-section">
+      <div class="inspector-section insp-type">
         <label class="inspector-label">노드 타입</label>
         <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--primary-light);">
           ${node.type} (${node.category})
@@ -118,6 +120,7 @@ export class Inspector {
     });
 
     this.bindStructureSection(node);
+    this.bindRoadmapSection(node);
 
     // Event listeners
     const titleInp = this.contentArea.querySelector('#inp-node-title');
@@ -143,6 +146,35 @@ export class Inspector {
     this.contentArea.querySelector('#btn-delete-node').addEventListener('click', () => {
       this.state.removeNode(node.id);
     });
+  }
+
+  // Roadmap status + period (not for decisions)
+  roadmapSectionHtml(node) {
+    if (getNodeShape(node) === 'decision') return '';
+    const cur = node.progress || '';
+    return `
+      <div class="inspector-section">
+        <label class="inspector-label">진행 상태</label>
+        <div class="insp-seg" id="progress-seg">
+          ${[{ key: '', label: '없음' }, ...PROGRESS_STATES].map(p => `
+            <button class="insp-seg-btn ${cur === p.key ? 'on' : ''} ${p.key ? 'p-' + p.key : ''}" data-progress="${p.key}">${p.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="inspector-section">
+        <label class="inspector-label">기간 / 시점</label>
+        <input type="text" class="inspector-input" id="inp-node-period" maxlength="30" placeholder="예: 2026 Q4, ~2027.06, D-30" value="${this.escapeHtml(node.period || '')}" />
+      </div>`;
+  }
+
+  bindRoadmapSection(node) {
+    this.contentArea.querySelectorAll('[data-progress]').forEach(btn => btn.addEventListener('click', () => {
+      this.state.updateNode(node.id, { progress: btn.dataset.progress || undefined });
+    }));
+    const period = this.contentArea.querySelector('#inp-node-period');
+    period?.addEventListener('change', () => {
+      this.state.updateNode(node.id, { period: period.value.trim() || undefined });
+    });
+    period?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) period.blur(); });
   }
 
   // Checklist editor for regular nodes, branch editor for decision nodes
@@ -306,14 +338,14 @@ export class Inspector {
 
     const labelInp = this.contentArea.querySelector('#inp-edge-label');
     labelInp.addEventListener('change', () => {
-      this.state.updateEdge(edge.id, { label: labelInp.value.trim() });
+      this.state.setEdgeLabel(edge.id, labelInp.value.trim());
     });
 
     this.contentArea.querySelector('#btn-line-bezier').addEventListener('click', () => {
       this.state.updateEdge(edge.id, { lineType: 'bezier' });
     });
-    this.contentArea.querySelector('#btn-line-step').addEventListener('click', () => {
-      this.state.updateEdge(edge.id, { lineType: 'step' });
+    this.contentArea.querySelector('#btn-line-orthogonal').addEventListener('click', () => {
+      this.state.updateEdge(edge.id, { lineType: 'orthogonal' });
     });
     this.contentArea.querySelector('#btn-line-straight').addEventListener('click', () => {
       this.state.updateEdge(edge.id, { lineType: 'straight' });

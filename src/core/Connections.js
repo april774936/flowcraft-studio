@@ -1,5 +1,6 @@
 // Connections.js: Professional Flowchart Orthogonal Routing, Bezier Curves, and Port Geometry
 import { isBranchPort, branchIdOf, branchPortPoint } from './Branches.js';
+import { isSecondClick } from '../utils/doubleClick.js';
 
 export class Connections {
   constructor(state, svgElement, edgesGroup, tempPathElement) {
@@ -125,6 +126,13 @@ export class Connections {
                `Q ${p2.x} ${midY}, ${p2.x} ${midY + cr} ` +
                `L ${p2.x} ${p2.y}`;
       }
+    }
+
+    // 3. Same-side loops (e.g. "다시" back to an earlier step): run around below / above
+    if ((fromPort === 'bottom' && toPort === 'bottom') || (fromPort === 'top' && toPort === 'top')) {
+      const down = fromPort === 'bottom';
+      const y = down ? Math.max(p1.y, p2.y) + 44 : Math.min(p1.y, p2.y) - 44;
+      return `M ${p1.x} ${p1.y} L ${p1.x} ${y} L ${p2.x} ${y} L ${p2.x} ${p2.y}`;
     }
 
     // Fallback: Clean step line
@@ -295,6 +303,10 @@ export class Connections {
       // Edge Selection
       g.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isSecondClick('edge:' + edge.id)) {
+          this.state.emit('quick:edge-label', edge.id);
+          return;
+        }
         this.state.selectEdge(edge.id);
       });
     });

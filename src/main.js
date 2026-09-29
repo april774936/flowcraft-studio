@@ -5,6 +5,8 @@ import { Canvas } from './core/Canvas.js';
 import { Connections } from './core/Connections.js';
 import { Simulator } from './core/Simulator.js';
 import { AIEngine } from './ai/AIEngine.js';
+import { QuickEdit } from './core/QuickEdit.js';
+import { isAdvanced, setAdvanced, applyAdvanced } from './utils/advanced.js';
 
 import { NodeRenderer } from './components/NodeRenderer.js';
 import { NotesManager } from './components/NotesManager.js';
@@ -17,6 +19,7 @@ import { AIModal } from './components/AIModal.js';
 import { Toolbar } from './components/Toolbar.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyAdvanced();
   // 1. Core State & Project Manager
   const projectManager = new ProjectManager();
   const state = new State(projectManager);
@@ -44,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const nodeRenderer = new NodeRenderer(state, nodesLayer, connections, canvas, timelineRuler);
   const notesManager = new NotesManager(state, notesLayer, canvas);
+  const quickEdit = new QuickEdit(state, canvas, connections, nodeRenderer);
 
   // Initial edges render
   connections.renderEdges();
@@ -129,6 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-go-home')?.addEventListener('click', () => {
     dashboard.open();
   });
+
+  // 고급 기능 toggle (automation UI: AI, run simulation, webhook/API palette)
+  const advBtn = document.getElementById('btn-advanced-toggle');
+  const syncAdvBtn = () => {
+    advBtn?.classList.toggle('on', isAdvanced());
+    advBtn?.setAttribute('aria-pressed', String(isAdvanced()));
+  };
+  advBtn?.addEventListener('click', () => { setAdvanced(!isAdvanced()); syncAdvBtn(); });
+  syncAdvBtn();
 
   document.getElementById('bg-color-picker')?.addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--bg-canvas', e.target.value);

@@ -368,3 +368,53 @@
   border: 1px solid var(--border-medium);
   pointer-events: none;
 }
+
+/* ---------- Roadmap info: period chip + status ---------- */
+.node-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.shape-terminal .node-meta { justify-content: center; }
+.node-period {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--node-accent);
+  background: color-mix(in srgb, var(--node-accent) 14%, transparent);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.node-progress-pill { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+.node-progress-pill.p-planned { color: var(--text-secondary); background: var(--bg-surface-elevated); }
+.node-progress-pill.p-active { color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
+.node-progress-pill.p-done { color: #34d399; background: rgba(52, 211, 153, 0.15); }
+.workflow-node.progress-done > .node-body,
+.workflow-node.progress-done > .node-shape { opacity: 0.55; }
+.workflow-node.progress-done.shape-process,
+.workflow-node.progress-done.shape-terminal { border-style: dashed; }
+.workflow-node.progress-done .node-title { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--text-primary) 45%, transparent); }
+.workflow-node.progress-active { --node-stroke: #38bdf8; }
+.workflow-node.progress-active.shape-process,
+.workflow-node.progress-active.shape-terminal { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18), var(--shadow-card); }
+.workflow-node.progress-active .node-shape { filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45)); }
+
+/* Milestone (hexagon) */
+.workflow-node.shape-milestone { min-height: 70px; }
+.shape-milestone .node-body { padding-left: 26px; padding-right: 26px; }
+.shape-milestone .node-shape path { stroke-width: 2px; }
+
+/* Inline edge label editor */
+.edge-label-input {
+  position: absolute;
+  z-index: 60;
+  transform: translate(-50%, -50%);
+  min-width: 120px;
+  padding: 5px 10px;
+  font: 600 13px/1.3 inherit;
+  text-align: center;
+  color: var(--text-primary);
+  background: var(--node-fill);
+  border: 1.5px solid var(--primary);
+  border-radius: 6px;
+  outline: none;
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+.node-title[contenteditable="true"]:focus { cursor: text; }

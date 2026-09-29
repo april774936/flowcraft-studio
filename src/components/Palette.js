@@ -1,190 +1,54 @@
 // Palette.js: Left sidebar node library, categorized drag-and-drop items, and templates
 import { getIcon } from '../utils/icons.js';
 import { getNodeShape, SHAPE_PATHS } from './NodeRenderer.js';
+import { isAdvanced } from '../utils/advanced.js';
 
+// `advanced: true` categories only show when 고급 기능 is on
 export const NodeLibrary = [
   {
-    category: '트리거 (Triggers)',
+    category: '기본 단계',
     items: [
+      { type: 'start', category: 'start', title: '시작', desc: '흐름의 출발점 · 현재 위치', icon: 'start', color: '#10b981' },
+      { type: 'action', category: 'action', title: '단계', desc: '하나의 할 일·개념·과정', icon: 'action', color: '#3b82f6' },
       {
-        type: 'start',
-        category: 'start',
-        title: '시작 이벤트',
-        desc: '워크플로우의 진입점',
-        icon: 'start',
-        color: '#10b981'
+        type: 'action', category: 'action', title: '체크리스트 단계', desc: '여러 확인 항목을 가진 단계',
+        icon: 'check', color: '#10b981', checklist: ['확인 항목 1', '확인 항목 2', '확인 항목 3']
       },
+      { type: 'milestone', category: 'milestone', title: '마일스톤', desc: '중간 목표 · 달성 지점', icon: 'flag', color: '#f59e0b' },
+      { type: 'end', category: 'end', title: '목표 / 끝', desc: '최종 목표 · 흐름의 끝', icon: 'target', color: '#ec4899' }
+    ]
+  },
+  {
+    category: '분기',
+    items: [
+      { type: 'condition', category: 'condition', title: '예 / 아니오', desc: '두 갈래로 나뉘는 판단', icon: 'condition', color: '#8b5cf6' },
       {
-        type: 'start',
-        category: 'start',
-        title: 'Webhook 수신',
-        desc: '외부 HTTP Webhook 이벤트 수신',
-        icon: 'webhook',
-        color: '#10b981'
-      },
-      {
-        type: 'start',
-        category: 'start',
-        title: '스케줄러 (Cron)',
-        desc: '주기적인 타이머 반복 실행',
-        icon: 'delay',
-        color: '#10b981'
+        type: 'condition', category: 'condition', title: '여러 갈래 분기', desc: '선택지가 3개 이상인 판단',
+        icon: 'condition', color: '#8b5cf6', branches: ['선택 A', '선택 B', '선택 C']
       }
     ]
   },
   {
-    category: '프로세스 및 로직 (Logic)',
+    category: '자료 · 메모',
     items: [
-      {
-        type: 'action',
-        category: 'action',
-        title: '태스크 실행',
-        desc: '일반적인 비즈니스 로직 처리',
-        icon: 'action',
-        color: '#3b82f6'
-      },
-      {
-        type: 'condition',
-        category: 'condition',
-        title: '조건 분기 (If-Else)',
-        desc: '참/거짓 조건에 따른 분기',
-        icon: 'condition',
-        color: '#8b5cf6'
-      },
-      {
-        type: 'condition',
-        category: 'condition',
-        title: '다중 분기 (N갈래)',
-        desc: '결과에 따라 여러 경로로 분기',
-        icon: 'condition',
-        color: '#8b5cf6',
-        branches: ['경우 A', '경우 B', '경우 C']
-      },
-      {
-        type: 'action',
-        category: 'action',
-        title: '체크리스트 단계',
-        desc: '여러 확인 항목을 가진 단계',
-        icon: 'check',
-        color: '#10b981',
-        checklist: ['확인 항목 1', '확인 항목 2', '확인 항목 3']
-      },
-      {
-        type: 'action',
-        category: 'action',
-        title: '데이터 필터/변환',
-        desc: 'JSON 데이터 가공 및 필터링',
-        icon: 'transform',
-        color: '#3b82f6'
-      },
-      {
-        type: 'action',
-        category: 'action',
-        title: '시간 지연 (Delay)',
-        desc: '지정 시간 동안 대기',
-        icon: 'delay',
-        color: '#3b82f6'
-      }
+      { type: 'document', category: 'document', title: '자료 / 문서', desc: '교재·자격증·참고 자료', icon: 'book', color: '#f59e0b' },
+      { type: 'manual', category: 'manual', title: '직접 할 일', desc: '실습·상담·면접 등 사람이 하는 일', icon: 'user', color: '#f97316' },
+      { type: 'note', category: 'note', title: '스티키 메모', desc: '캔버스에 자유 메모 추가', icon: 'stickyNote', color: '#facc15' }
     ]
   },
   {
-    category: '외부 서비스 연동 (Integrations)',
+    category: '자동화 (고급)',
+    advanced: true,
     items: [
-      {
-        type: 'action',
-        category: 'integration',
-        title: 'HTTP / API 호출',
-        desc: 'REST API 요청 및 응답 처리',
-        icon: 'api',
-        color: '#10b981'
-      },
-      {
-        type: 'action',
-        category: 'integration',
-        title: '이메일 발송',
-        desc: 'SMTP / SendGrid 이메일 전송',
-        icon: 'email',
-        color: '#10b981'
-      },
-      {
-        type: 'action',
-        category: 'integration',
-        title: 'Slack / 메신저 알림',
-        desc: '팀 채널에 메시지 통보',
-        icon: 'message',
-        color: '#f59e0b'
-      },
-      {
-        type: 'action',
-        category: 'integration',
-        title: '데이터베이스 쿼리',
-        desc: 'SQL / NoSQL 읽기/쓰기',
-        icon: 'database',
-        color: '#10b981'
-      }
-    ]
-  },
-  {
-    category: '종료 (Outcomes)',
-    items: [
-      {
-        type: 'end',
-        category: 'end',
-        title: '성공 완료',
-        desc: '정상 프로세스 마감',
-        icon: 'end',
-        color: '#ec4899'
-      },
-      {
-        type: 'end',
-        category: 'end',
-        title: '실패 / 중단',
-        desc: '오류 처리 후 비정상 마감',
-        icon: 'end',
-        color: '#ef4444'
-      }
-    ]
-  },
-  {
-    category: '주석 및 메모 (Annotations)',
-    items: [
-      {
-        type: 'note',
-        category: 'note',
-        title: '스티키 메모 (노랑)',
-        desc: '캔버스에 자유 메모 추가',
-        icon: 'stickyNote',
-        color: '#facc15'
-      }
-    ]
-  },
-  {
-    category: '보안 및 감사 (Auditing)',
-    items: [
-      {
-        type: 'manual',
-        category: 'manual',
-        title: '수동 작업 (Manual Operation)',
-        desc: '수기 기록, 육안 검토 등 사람의 작업',
-        icon: 'edit',
-        color: '#10b981' // Greenish as in the image
-      },
-      {
-        type: 'document',
-        category: 'document',
-        title: '문서 (Document)',
-        desc: '출력물, 기록 문서, 보고서',
-        icon: 'fileText',
-        color: '#f59e0b' // Yellowish/Orange
-      },
-      {
-        type: 'action',
-        category: 'action',
-        title: '시스템 처리 (Process)',
-        desc: '전산 처리 및 계산',
-        icon: 'settings',
-        color: '#f59e0b' // Red/Orange for system processes in their diagram
-      }
+      { type: 'start', category: 'start', title: 'Webhook 수신', desc: '외부 HTTP Webhook 이벤트 수신', icon: 'webhook', color: '#10b981' },
+      { type: 'start', category: 'start', title: '스케줄러 (Cron)', desc: '주기적인 타이머 반복 실행', icon: 'delay', color: '#10b981' },
+      { type: 'action', category: 'action', title: '데이터 필터/변환', desc: 'JSON 데이터 가공 및 필터링', icon: 'transform', color: '#3b82f6' },
+      { type: 'action', category: 'action', title: '시간 지연 (Delay)', desc: '지정 시간 동안 대기', icon: 'delay', color: '#3b82f6' },
+      { type: 'action', category: 'integration', title: 'HTTP / API 호출', desc: 'REST API 요청 및 응답 처리', icon: 'api', color: '#10b981' },
+      { type: 'action', category: 'integration', title: '이메일 발송', desc: 'SMTP / SendGrid 이메일 전송', icon: 'email', color: '#ec4899' },
+      { type: 'action', category: 'integration', title: 'Slack / 메신저 알림', desc: '팀 채널에 메시지 통보', icon: 'message', color: '#f59e0b' },
+      { type: 'action', category: 'integration', title: '데이터베이스 쿼리', desc: 'SQL / NoSQL 읽기/쓰기', icon: 'database', color: '#10b981' },
+      { type: 'end', category: 'end', title: '실패 / 중단', desc: '오류 발생 시 종료', icon: 'end', color: '#ef4444' }
     ]
   }
 ];
@@ -199,6 +63,7 @@ export class Palette {
 
     this.render();
     this.setupDropTarget();
+    window.addEventListener('advanced:change', () => this.render());
   }
 
   setTab(tabName) {
@@ -225,6 +90,7 @@ export class Palette {
     let hasMatch = false;
 
     NodeLibrary.forEach(cat => {
+      if (cat.advanced && !isAdvanced()) return;
       const filteredItems = cat.items.filter(item => {
         if (!this.searchQuery) return true;
         return item.title.toLowerCase().includes(this.searchQuery) ||
@@ -288,30 +154,23 @@ export class Palette {
 
   renderTemplates() {
     const templates = [
-      {
-        key: 'ecommerce',
-        name: '🛍️ 이커머스 결제 & 자동 배포',
-        badge: '쇼핑몰/주문',
-        desc: '주문 접수, 재고 확인, 분기 처리 및 카카오 알림톡 발송까지 포함된 완전한 결제 플로우'
-      },
-      {
-        key: 'realestate',
-        name: '🏠 부동산 매매 절차',
-        badge: '체크리스트/다중분기',
-        desc: '매물 확인 → 결과별 3갈래 분기 → 계약서 작성 → 잔금·등기까지 단계별 확인 항목 포함'
-      },
-      {
-        key: 'cicd',
-        name: '🚀 DevOps CI/CD 배포 파이프라인',
-        badge: '클라우드/빌드',
-        desc: 'Git Push 감지, 자동 린트/테스트, Docker 빌드, K8s 배포 및 Slack 알림 연동'
-      }
-    ];
+      { key: 'career', name: '🧭 커리어 로드맵', badge: '로드맵', desc: '현재 위치 → 역량 진단 → 단기 목표 → 경로 선택(3갈래) → 중기 · 장기 목표. 기간 · 진행 상태 포함' },
+      { key: 'study', name: '📚 공부 흐름도', badge: '공부', desc: '자료 → 핵심 개념 → 원리 → 예제 → 이해도 점검(3갈래) → 응용 · 복습 루프' },
+      { key: 'exam', name: '📝 시험 준비 계획', badge: '공부', desc: 'D-120부터 범위 파악 · 1회독 · 기출 · 모의고사 → 점수별 대응 → 시험' },
+      { key: 'realestate', name: '🏠 부동산 매매 절차', badge: '체크리스트', desc: '매물 확인 → 결과별 3갈래 분기 → 계약서 작성 → 잔금 · 등기' },
+      { key: 'ecommerce', name: '🛍️ 이커머스 결제 자동화', badge: '자동화', desc: '주문 · 재고 · 결제 · 알림 자동화 예시', advanced: true },
+      { key: 'cicd', name: '🚀 CI/CD 배포 파이프라인', badge: '자동화', desc: '빌드 · 테스트 · 배포 자동화 예시', advanced: true }
+    ].filter(t => !t.advanced || isAdvanced());
 
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
     container.style.gap = '10px';
+
+    const hint = document.createElement('div');
+    hint.className = 'template-hint';
+    hint.textContent = '템플릿을 누르면 새 프로젝트로 만들어져요. 지금 프로젝트는 그대로 남아요.';
+    container.appendChild(hint);
 
     templates.forEach(tpl => {
       const card = document.createElement('div');
@@ -323,18 +182,11 @@ export class Palette {
       `;
 
       card.addEventListener('click', () => {
-        if (confirm(`'${tpl.name}' 템플릿을 불러오시겠습니까? 현재 프로젝트의 내용이 템플릿으로 대체됩니다.`)) {
-          const tplData = this.state.projectManager.getTemplateByKey(tpl.key);
-          if (tplData) {
-            this.state.pushHistory();
-            this.state.nodes = JSON.parse(JSON.stringify(tplData.nodes));
-            this.state.edges = JSON.parse(JSON.stringify(tplData.edges));
-            this.state.notes = JSON.parse(JSON.stringify(tplData.notes || []));
-            this.state.viewport = { ...tplData.viewport };
-            this.state.save();
-            this.state.emit('canvas:change');
-          }
-        }
+        const name = tpl.name.replace(/^\S+\s/, '');
+        if (!confirm(`'${name}' 템플릿으로 새 프로젝트를 만들까요?`)) return;
+        const pm = this.state.projectManager;
+        pm.createProject(name, tpl.key, 'flowchart');
+        this.state.loadActiveProject();
       });
 
       container.appendChild(card);

@@ -238,3 +238,16 @@
 .insp-add-btn { width: 100%; justify-content: center; margin-top: 2px; }
 .insp-add-btn svg { width: 14px; height: 14px; }
 .insp-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+/* Roadmap status segmented control */
+.insp-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--bg-surface-elevated); padding: 3px; border-radius: 8px; border: 1px solid var(--border-subtle); }
+.insp-seg-btn { padding: 6px 4px; font-size: 12px; border-radius: 6px; color: var(--text-secondary); background: transparent; }
+.insp-seg-btn:hover { color: var(--text-primary); }
+.insp-seg-btn.on { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.25); font-weight: 600; }
+.insp-seg-btn.on.p-planned { color: #94a3b8; }
+.insp-seg-btn.on.p-active { color: #38bdf8; }
+.insp-seg-btn.on.p-done { color: #34d399; }
+
+/* Simple mode hides automation-only inspector parts */
+.simple-mode .insp-ai-box,
+.simple-mode .insp-type { display: none; }

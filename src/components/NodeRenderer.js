@@ -2,6 +2,7 @@
 import { Icons, getIcon } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
 import { branchPort, branchPortPoint, newItemId } from '../core/Branches.js';
+import { isSecondClick } from '../utils/doubleClick.js';
 
 const MAX_VISIBLE_CHECKS = 8;
 
@@ -15,13 +16,22 @@ export const SHAPE_PATHS = {
   database: '<path d="M1 11 C1 -3 99 -3 99 11 V89 C99 103 1 103 1 89 Z"/><path class="shape-detail" d="M1 11 C1 25 99 25 99 11"/>',
   subprocess: '<path d="M1 1 H99 V99 H1 Z"/><path class="shape-detail" d="M7 1 V99 M93 1 V99"/>',
   io: '<path d="M9 1 H99 L91 99 H1 Z"/>',
-  delay: '<path d="M1 1 H76 C104 1 104 99 76 99 H1 Z"/>'
+  delay: '<path d="M1 1 H76 C104 1 104 99 76 99 H1 Z"/>',
+  milestone: '<path d="M7 1 H93 L99 50 L93 99 H7 L1 50 Z"/>'
 };
+
+// Roadmap status shown on nodes (independent of the run-simulation status)
+export const PROGRESS_STATES = [
+  { key: 'planned', label: '예정' },
+  { key: 'active', label: '진행 중' },
+  { key: 'done', label: '완료' }
+];
 
 export function getNodeShape(node) {
   if (node.type === 'start' || node.type === 'end') return 'terminal';
   if (node.type === 'condition') return 'decision';
   if (node.type === 'manual' || node.type === 'document') return node.type;
+  if (node.type === 'milestone') return 'milestone';
   switch (node.icon) {
     case 'database': return 'database';
     case 'api': return 'subprocess';
@@ -103,9 +113,19 @@ export class NodeRenderer {
         : '';
       if (checklist.length) el.classList.add('has-checklist');
 
+      // Roadmap info: period chip + status pill; finished steps are dimmed
+      const progress = PROGRESS_STATES.find(p => p.key === node.progress);
+      if (progress) el.classList.add(`progress-${progress.key}`);
+      const metaHtml = (node.period || progress) && shape !== 'decision' ? `
+        <div class="node-meta">
+          ${node.period ? `<span class="node-period">${this.escapeHtml(node.period)}</span>` : ''}
+          ${progress ? `<span class="node-progress-pill p-${progress.key}">${progress.key === 'done' ? '✓ ' : ''}${progress.label}</span>` : ''}
+        </div>` : '';
+
       el.innerHTML = `
         ${SHAPE_PATHS[shape] ? `<svg class="node-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${SHAPE_PATHS[shape]}</svg>` : ''}
         <div class="node-body">
+          ${metaHtml}
           <div class="node-header">
             <div class="node-icon" style="color: ${accentColor};">${getIcon(node.icon, node.type)}</div>
             <div class="node-title" contenteditable="true" spellcheck="false" title="클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
@@ -149,6 +169,13 @@ export class NodeRenderer {
 
         e.stopPropagation();
 
+        // Second click on the same node → edit its title (works across re-renders)
+        if (!e.target.closest('.node-check') && isSecondClick('node:' + node.id) && !e.target.isContentEditable) {
+          e.preventDefault();
+          requestAnimationFrame(() => this.editTitle(node.id));
+          return;
+        }
+
         const isMulti = e.metaKey || e.ctrlKey || e.shiftKey;
         if (!this.state.selectedNodeIds.has(node.id) || isMulti) {
           this.state.selectNode(node.id, isMulti);
@@ -187,9 +214,19 @@ export class NodeRenderer {
           }
         });
         titleEl.addEventListener('keydown', (e) => {
+          if (e.isComposing) return; // Korean IME: let the composition finish first
           if (e.key === 'Enter') {
             e.preventDefault();
             titleEl.blur();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            titleEl.innerText = node.title;
+            titleEl.blur();
+          } else if (e.key === 'Tab') {
+            // Commit and continue with the next step (quick input)
+            e.preventDefault();
+            titleEl.blur();
+            this.state.emit('quick:child', node.id);
           }
         });
       }
@@ -369,6 +406,18 @@ export class NodeRenderer {
         this.canvas.container.classList.remove('connecting');
       }
     });
+  }
+
+  // Put the caret in a node's title with the text selected (typing replaces it)
+  editTitle(nodeId) {
+    const titleEl = this.layer.querySelector(`[data-node-id="${nodeId}"] .node-title`);
+    if (!titleEl) return;
+    titleEl.focus();
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
   updateNodePositionsInDOM() {
