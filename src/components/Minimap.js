@@ -49,7 +49,7 @@ export class Minimap {
     this.ctx.fillRect(0, 0, width, height);
 
     // Draw edges
-    this.ctx.strokeStyle = '#334155';
+    this.ctx.strokeStyle = computedStyles.getPropertyValue('--border-strong').trim() || '#334155';
     this.ctx.lineWidth = 1;
     const nodeMap = new Map(this.state.nodes.map(n => [n.id, n]));
 
