@@ -59,6 +59,9 @@
 }
 
 /* SVG Edge styles - High contrast & luminous */
+/* Invisible grab area around each edge: ~15px either side on screen, at any zoom */
+.edge-hit { stroke-width: calc(30px / var(--zoom, 1)); }
+
 .edge-path {
   fill: none;
   stroke: #60a5fa;
@@ -87,6 +90,14 @@
   stroke: #f59e0b;
   stroke-dasharray: 7 4;
 }
+
+.edge-path.main-path {
+  stroke: #fbbf24;
+  stroke-width: 4.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.45));
+}
+.edge-path.main-path.selected { stroke: #a78bfa; }
 
 .edge-path.running {
   stroke: #06b6d4;

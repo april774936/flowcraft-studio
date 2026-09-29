@@ -19,6 +19,10 @@ export class QuickEdit {
 
     this.state.on('quick:child', (id) => this.addChild(id));
     this.state.on('quick:edge-label', (id) => this.editEdgeLabel(id));
+    this.state.on('quick:edit-title', (id) => requestAnimationFrame(() => this.nodes.editTitle(id)));
+    this.state.on('quick:below', (id) => this.addBelow(id));
+    this.state.on('quick:yes', (id) => this.addYes(id));
+    this.state.on('quick:drop-new', (d) => this.addAtDrop(d));
     window.addEventListener('keydown', (e) => this.onKeyDown(e));
     this.canvas.container.addEventListener('dblclick', (e) => this.onCanvasDblClick(e));
   }
@@ -108,7 +112,56 @@ export class QuickEdit {
 
     const out = this.state.edges.filter(e => e.from === node.id);
     const y = out.length ? this.bottomOfTargets(out) + GAP_Y : Math.round(node.y + height / 2 - 40);
-    this.createAndEdit({ ...this.stepDefaults(node), x, y }, { from: node.id, fromPort: 'right' });
+    const pos = this.state.freeSpot(x, y, 260, 80, 24);
+    this.createAndEdit({ ...this.stepDefaults(node), ...pos }, { from: node.id, fromPort: 'right' });
+  }
+
+  // "+" right of a legacy Yes/No decision: the Yes branch
+  addYes(nodeId) {
+    const node = this.state.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    const { width, height } = this.size(node);
+    const out = this.state.edges.filter(e => e.from === node.id && e.fromPort === 'right');
+    const y = out.length ? this.bottomOfTargets(out) + GAP_Y : Math.round(node.y + height / 2 - 40);
+    const pos = this.state.freeSpot(Math.round(node.x + width + GAP_X), y, 260, 80, 24);
+    this.createAndEdit({ ...this.stepDefaults(null), ...pos }, { from: node.id, fromPort: 'right', label: 'Yes' });
+  }
+
+  // "+" dragged onto empty canvas: new step where it was dropped, connected
+  addAtDrop({ from, port, x, y }) {
+    const node = this.state.nodes.find(n => n.id === from);
+    if (!node) return;
+    if (port === 'newbranch') { // new branch of an N-way decision
+      const branches = node.branches.map(b => ({ ...b }));
+      const id = newItemId('br');
+      const label = `선택 ${branches.length + 1}`;
+      let created = null;
+      this.batch(() => {
+        this.state.updateBranches(node.id, [...branches, { id, label }]);
+        created = this.state.addNode({ ...this.stepDefaults(null), x: Math.round(x), y: Math.round(y - 40) });
+        this.state.addEdge(node.id, branchPort(id), created.id, 'left', label, 'orthogonal');
+        this.state.selectNode(created.id, false);
+      });
+      requestAnimationFrame(() => this.nodes.editTitle(created.id));
+      return;
+    }
+    const down = port === 'bottom';
+    const label = node.type === 'condition' ? (down ? 'No' : 'Yes') : '';
+    const pos = down ? { x: Math.round(x - 130), y: Math.round(y) } : { x: Math.round(x), y: Math.round(y - 40) };
+    this.createAndEdit({ ...this.stepDefaults(node), ...pos },
+      { from: node.id, fromPort: port, toPort: down ? 'top' : 'left', label });
+  }
+
+  // "+" under a node: next step below it (legacy Yes/No decision: the No branch)
+  addBelow(nodeId) {
+    const node = this.state.nodes.find(n => n.id === nodeId);
+    if (!node || node.type === 'end') return;
+    const { width, height } = this.size(node);
+    const x = Math.round(node.x + width / 2 - 130);
+    const pos = this.state.freeSpot(x, Math.round(node.y + height + 90), 260, 80, 24);
+    const label = node.type === 'condition' ? 'No' : '';
+    this.createAndEdit({ ...this.stepDefaults(node), ...pos },
+      { from: node.id, fromPort: 'bottom', toPort: 'top', label });
   }
 
   addSibling(nodeId) {

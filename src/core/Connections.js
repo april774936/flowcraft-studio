@@ -1,6 +1,7 @@
 // Connections.js: Professional Flowchart Orthogonal Routing, Bezier Curves, and Port Geometry
-import { isBranchPort, branchIdOf, branchPortPoint } from './Branches.js';
+import { isBranchPort, branchIdOf, branchPortPoint, branchPort, newItemId } from './Branches.js';
 import { isSecondClick } from '../utils/doubleClick.js';
+import { computeMainPath } from './MainPath.js';
 
 export class Connections {
   constructor(state, svgElement, edgesGroup, tempPathElement) {
@@ -65,7 +66,7 @@ export class Connections {
 
     // 1. Right to Left (Standard horizontal flow)
     if ((fromPort === 'right' && toPort === 'left') || (fromPort === 'left' && toPort === 'right')) {
-      const isForward = p2.x > p1.x + 20;
+      const isForward = p2.x > p1.x + 4; // close neighbours still connect directly
 
       if (isForward) {
         const midX = p1.x + (p2.x - p1.x) * midRatio;
@@ -128,7 +129,35 @@ export class Connections {
       }
     }
 
-    // 3. Same-side loops (e.g. "다시" back to an earlier step): run around below / above
+    // 3. One-corner routes: sideways out, then down/up into a top/bottom port (and the reverse)
+    const horiz = (p) => p === 'right' || p === 'left';
+    const vert = (p) => p === 'top' || p === 'bottom';
+    if (horiz(fromPort) && vert(toPort)) {
+      const outOk = fromPort === 'right' ? p2.x > p1.x + 10 : p2.x < p1.x - 10;
+      const inOk = toPort === 'top' ? p2.y > p1.y + 10 : p2.y < p1.y - 10;
+      if (outOk && inOk) {
+        const dx = Math.sign(p2.x - p1.x), dy = Math.sign(p2.y - p1.y);
+        const cr = Math.min(r, Math.abs(p2.x - p1.x) / 2, Math.abs(p2.y - p1.y) / 2);
+        return `M ${p1.x} ${p1.y} L ${p2.x - dx * cr} ${p1.y} Q ${p2.x} ${p1.y}, ${p2.x} ${p1.y + dy * cr} L ${p2.x} ${p2.y}`;
+      }
+    }
+    if (vert(fromPort) && horiz(toPort)) {
+      const outOk = fromPort === 'bottom' ? p2.y > p1.y + 10 : p2.y < p1.y - 10;
+      const inOk = toPort === 'left' ? p2.x > p1.x + 10 : p2.x < p1.x - 10;
+      if (outOk && inOk) {
+        const dx = Math.sign(p2.x - p1.x), dy = Math.sign(p2.y - p1.y);
+        const cr = Math.min(r, Math.abs(p2.x - p1.x) / 2, Math.abs(p2.y - p1.y) / 2);
+        return `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y - dy * cr} Q ${p1.x} ${p2.y}, ${p1.x + dx * cr} ${p2.y} L ${p2.x} ${p2.y}`;
+      }
+    }
+    // top -> bottom (upward link)
+    if (fromPort === 'top' && toPort === 'bottom' && p2.y < p1.y - 10) {
+      const midY = (p1.y + p2.y) / 2;
+      if (Math.abs(p2.x - p1.x) < 6) return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+      return `M ${p1.x} ${p1.y} L ${p1.x} ${midY} L ${p2.x} ${midY} L ${p2.x} ${p2.y}`;
+    }
+
+    // 4. Same-side loops (e.g. "다시" back to an earlier step): run around below / above
     if ((fromPort === 'bottom' && toPort === 'bottom') || (fromPort === 'top' && toPort === 'top')) {
       const down = fromPort === 'bottom';
       const y = down ? Math.max(p1.y, p2.y) + 44 : Math.min(p1.y, p2.y) - 44;
@@ -219,6 +248,7 @@ export class Connections {
     const nodeMap = new Map(this.state.nodes.map(n => [n.id, n]));
     // Obstacles for label placement: every node, plus labels as they get placed
     const obstacles = this.state.nodes.map(n => this.getNodeRect(n));
+    const main = computeMainPath(this.state.nodes, this.state.edges);
 
     this.state.edges.forEach(edge => {
       const fromNode = nodeMap.get(edge.from);
@@ -245,6 +275,8 @@ export class Connections {
         markerId = 'arrowhead-no';
       }
 
+      const isMain = main.edges.has(edge.id);
+      if (isMain) markerId = 'arrowhead-main';
       if (isSelected) markerId = 'arrowhead-selected';
 
       // Group
@@ -256,13 +288,13 @@ export class Connections {
       hitPath.setAttribute('d', d);
       hitPath.setAttribute('fill', 'none');
       hitPath.setAttribute('stroke', 'transparent');
-      hitPath.setAttribute('stroke-width', '20');
+      hitPath.setAttribute('class', 'edge-hit'); // grab area well beyond the visible line (canvas.css)
       hitPath.style.cursor = 'pointer';
 
       // Visible styled path
       const visiblePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       visiblePath.setAttribute('d', d);
-      visiblePath.setAttribute('class', `edge-path ${branchClass} ${isSelected ? 'selected' : ''}`);
+      visiblePath.setAttribute('class', `edge-path ${branchClass} ${isMain ? 'main-path' : ''} ${isSelected ? 'selected' : ''}`);
       visiblePath.setAttribute('marker-end', `url(#${markerId})`);
 
       g.appendChild(hitPath);
@@ -273,7 +305,7 @@ export class Connections {
       // Edge Label
       if (edge.label) {
         const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        labelGroup.setAttribute('class', 'edge-label-group');
+        labelGroup.setAttribute('class', `edge-label-group ${isMain ? 'main-path' : ''}`);
 
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('class', 'edge-label-text');
@@ -320,20 +352,71 @@ export class Connections {
     this.tempPath.setAttribute('d', `M ${worldX} ${worldY} L ${worldX} ${worldY}`);
   }
 
-  updateConnecting(worldX, worldY) {
+  // snapNode: node the wire would connect to if dropped now (the preview snaps to its port)
+  updateConnecting(worldX, worldY, snapNode = null) {
     if (!this.isConnecting || !this.dragStart) return;
-    const d = this.createPathD(
-      { x: this.dragStart.x, y: this.dragStart.y },
-      { x: worldX, y: worldY },
-      'orthogonal',
-      this.dragStart.port,
-      'left'
-    );
+    const fromPort = this.dragStart.port === 'newbranch' ? 'right' : this.dragStart.port;
+    let end = { x: worldX, y: worldY };
+    let toPort = fromPort === 'bottom' ? 'top' : 'left';
+    if (snapNode && snapNode.id !== this.dragStart.nodeId) {
+      toPort = this.pickTargetPort(this.dragStart, snapNode);
+      end = this.getPortCoordinates(snapNode, toPort);
+    }
+    const d = this.createPathD({ x: this.dragStart.x, y: this.dragStart.y }, end, 'orthogonal', fromPort, toPort);
     this.tempPath.setAttribute('d', d);
+    this.tempPath.setAttribute('marker-end', 'url(#arrowhead-selected)');
+    document.querySelectorAll('.workflow-node.drop-target').forEach(el => { if (!snapNode || el.dataset.nodeId !== snapNode.id) el.classList.remove('drop-target'); });
+    if (snapNode && snapNode.id !== this.dragStart.nodeId) document.querySelector(`[data-node-id="${snapNode.id}"]`)?.classList.add('drop-target');
+  }
+
+  // Which side of the target a new connection enters, from where the two nodes sit
+  pickTargetPort(start, toNode) {
+    const fromNode = start && this.state.nodes.find(n => n.id === start.nodeId);
+    if (!fromNode) return 'left';
+    const port = start.port === 'newbranch' || isBranchPort(start.port) ? 'right' : start.port;
+    const p1 = this.getPortCoordinates(fromNode, port);
+    const r = this.getNodeRect(toNode);
+    const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    if (port === 'bottom') {
+      if (r.y > p1.y + 20) return 'top';                               // below: straight in from above
+      if (cy > p1.y + 10) return r.x > p1.x ? 'left' : 'right';        // beside: turn into its side
+      return 'bottom';                                                 // above: loop around underneath
+    }
+    if (port === 'top') {
+      if (r.y + r.h < p1.y - 20) return 'bottom';
+      if (cy < p1.y - 10) return r.x > p1.x ? 'left' : 'right';
+      return 'top';
+    }
+    if (port === 'left') {
+      if (r.x + r.w < p1.x - 20) return 'right';
+      if (cx < p1.x - 10) return r.y > p1.y ? 'top' : 'bottom';
+      return 'right';
+    }
+    // right
+    if (r.x > p1.x + 20) return 'left';                                // ahead: into its left side
+    if (cx > p1.x + 10) return r.y > p1.y ? 'top' : 'bottom';          // overlapping column: from above/below
+    return 'left';                                                     // behind: loop back
   }
 
   endConnecting(targetNodeId = null, targetPort = 'left') {
     if (!this.isConnecting) return;
+    // Dragged from the "new branch" +: add the branch, then connect it
+    if (targetNodeId && targetNodeId !== this.dragStart.nodeId && this.dragStart.port === 'newbranch') {
+      const fromNode = this.state.nodes.find(n => n.id === this.dragStart.nodeId);
+      if (fromNode && Array.isArray(fromNode.branches)) {
+        const id = newItemId('br');
+        const label = `선택 ${fromNode.branches.length + 1}`;
+        this.state.beginGesture();
+        this.state.updateBranches(fromNode.id, [...fromNode.branches, { id, label }]);
+        this.state.addEdge(fromNode.id, branchPort(id), targetNodeId, targetPort, label, 'orthogonal');
+        this.state.endGesture();
+        this.state.emit('canvas:change');
+      }
+      this.isConnecting = false;
+      this.dragStart = null;
+      this.tempPath.style.display = 'none';
+      return;
+    }
     if (targetNodeId && targetNodeId !== this.dragStart.nodeId) {
       const fromNode = this.state.nodes.find(n => n.id === this.dragStart.nodeId);
       let label = '';
@@ -348,5 +431,6 @@ export class Connections {
     this.isConnecting = false;
     this.dragStart = null;
     this.tempPath.style.display = 'none';
+    document.querySelectorAll('.workflow-node.drop-target').forEach(el => el.classList.remove('drop-target'));
   }
 }

@@ -1,7 +1,8 @@
 // Inspector.js: Right drawer properties editor and node-level documentation memo tab
 import { Icons, getIcon } from '../utils/icons.js';
 import { getNodeShape, PROGRESS_STATES } from './NodeRenderer.js';
-import { legacyBranchesFor, newItemId } from '../core/Branches.js';
+import { legacyBranchesFor, newItemId, branchPort } from '../core/Branches.js';
+import { computeMainPath, mainComponentEdges } from '../core/MainPath.js';
 
 export class Inspector {
   constructor(state, contentArea, headerTitleEl, headerIconEl, aiEngine) {
@@ -75,6 +76,8 @@ export class Inspector {
         <textarea class="inspector-textarea" id="inp-node-desc" placeholder="이 노드가 수행하는 작업에 대한 상세 설명">${this.escapeHtml(node.desc || '')}</textarea>
       </div>
 
+      ${this.mainSectionHtml(node)}
+
       ${this.roadmapSectionHtml(node)}
 
       ${this.structureSectionHtml(node)}
@@ -121,9 +124,11 @@ export class Inspector {
 
     this.bindStructureSection(node);
     this.bindRoadmapSection(node);
+    this.bindMainSection(node);
 
     // Event listeners
     const titleInp = this.contentArea.querySelector('#inp-node-title');
+    titleInp.addEventListener('focus', () => titleInp.select());
     titleInp.addEventListener('change', () => {
       this.state.updateNode(node.id, { title: titleInp.value.trim() });
     });
@@ -145,6 +150,46 @@ export class Inspector {
 
     this.contentArea.querySelector('#btn-delete-node').addEventListener('click', () => {
       this.state.removeNode(node.id);
+    });
+  }
+
+  branchPortOf(node, b) {
+    if (Array.isArray(node.branches)) return branchPort(b.id);
+    return b.id === 'yes' ? 'right' : 'bottom';
+  }
+
+  isMainBranch(node, b) {
+    const port = this.branchPortOf(node, b);
+    return this.state.edges.some(e => e.from === node.id && e.fromPort === port && e.main);
+  }
+
+  // Main route toggle: marks the way into (and, when unambiguous, out of) this node
+  mainSectionHtml(node) {
+    const on = computeMainPath(this.state.nodes, this.state.edges).nodes.has(node.id);
+    const hasEdges = this.state.edges.some(e => e.from === node.id || e.to === node.id);
+    if (!hasEdges) return '';
+    return `
+      <div class="inspector-section">
+        <button class="btn-secondary insp-main-btn ${on ? 'on' : ''}" id="btn-node-main">
+          ★ ${on ? '메인 경로 해제' : '메인 경로로 표시'}
+        </button>
+        <div class="insp-hint">${on ? '이 노드가 속한 메인 경로 전체를 해제합니다.' : '이 노드를 지나는 흐름을 굵은 금색으로 강조합니다. 분기 노드에서는 ★로 메인 갈래를 고르세요.'}</div>
+      </div>`;
+  }
+
+  bindMainSection(node) {
+    this.contentArea.querySelector('#btn-node-main')?.addEventListener('click', () => {
+      const { nodes, edges } = this.state;
+      if (computeMainPath(nodes, edges).nodes.has(node.id)) {
+        this.state.setMainEdges([...mainComponentEdges(node.id, nodes, edges)], false);
+        return;
+      }
+      const inc = edges.filter(e => e.to === node.id);
+      const out = edges.filter(e => e.from === node.id);
+      let ids = inc.map(e => e.id);
+      if (out.length === 1 && node.type !== 'condition') ids.push(out[0].id);
+      if (!ids.length) ids = out.map(e => e.id);
+      this.state.setMainEdges(ids, true);
     });
   }
 
@@ -189,7 +234,7 @@ export class Inspector {
           <div class="insp-list" id="branch-list">
             ${branches.map((b, i) => `
               <div class="insp-row">
-                <span class="insp-branch-dot"></span>
+                <button class="insp-row-btn insp-star ${this.isMainBranch(node, b) ? 'on' : ''}" data-branch-main="${i}" title="이 분기를 메인 경로로">★</button>
                 <input class="inspector-input insp-row-input" data-branch-idx="${i}" value="${this.escapeHtml(b.label)}" maxlength="40" />
                 <button class="insp-row-btn" data-branch-next="${i}" title="이 분기의 다음 단계 추가">＋단계</button>
                 <button class="insp-row-btn danger" data-branch-del="${i}" title="분기 삭제" ${branches.length <= 1 ? 'disabled' : ''}>×</button>
@@ -261,6 +306,22 @@ export class Inspector {
       list[inp.dataset.branchIdx].label = text;
       this.state.updateBranches(node.id, list);
     }));
+    root.querySelectorAll('[data-branch-main]').forEach(btn => btn.addEventListener('click', () => {
+      const branches = Array.isArray(node.branches) ? node.branches : legacyBranchesFor(node, this.state.edges);
+      const b = branches[btn.dataset.branchMain];
+      const port = this.branchPortOf(node, b);
+      const turnOn = !this.isMainBranch(node, b);
+      const out = this.state.edges.filter(e => e.from === node.id);
+      if (turnOn && !out.some(e => e.fromPort === port)) {
+        alert('이 분기에 연결된 다음 단계가 없어요. 먼저 ＋단계로 연결해 주세요.');
+        return;
+      }
+      this.state.beginGesture();
+      this.state.setMainEdges(out.filter(e => e.fromPort !== port).map(e => e.id), false);
+      this.state.setMainEdges(out.filter(e => e.fromPort === port).map(e => e.id), turnOn);
+      this.state.endGesture();
+      this.state.emit('canvas:change');
+    }));
     root.querySelectorAll('[data-branch-del]').forEach(btn => btn.addEventListener('click', () => {
       const list = branches();
       const [removed] = list.splice(Number(btn.dataset.branchDel), 1);
@@ -315,6 +376,12 @@ export class Inspector {
       </div>
 
       <div class="inspector-section">
+        <button class="btn-secondary insp-main-btn ${edge.main ? 'on' : ''}" id="btn-edge-main">
+          ★ ${edge.main ? '메인 경로 해제' : '메인 경로로 표시'}
+        </button>
+      </div>
+
+      <div class="inspector-section">
         <label class="inspector-label">곡선 형태 (Line Type)</label>
         <div style="display: flex; gap: 6px;">
           <button class="btn-secondary ${edge.lineType === 'orthogonal' || !edge.lineType ? 'btn-primary' : ''}" id="btn-line-orthogonal" style="flex: 1; font-size: 11px;">
@@ -339,6 +406,10 @@ export class Inspector {
     const labelInp = this.contentArea.querySelector('#inp-edge-label');
     labelInp.addEventListener('change', () => {
       this.state.setEdgeLabel(edge.id, labelInp.value.trim());
+    });
+
+    this.contentArea.querySelector('#btn-edge-main').addEventListener('click', () => {
+      this.state.setMainEdges([edge.id], !edge.main);
     });
 
     this.contentArea.querySelector('#btn-line-bezier').addEventListener('click', () => {

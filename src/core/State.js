@@ -1,6 +1,13 @@
 // State.js: Central reactive state manager with history & event emitter
 import { normalizeChecklist, normalizeBranches, isBranchPort, branchIdOf, branchPort } from './Branches.js';
 
+// Hint texts that older versions saved as a node's real description
+const PLACEHOLDER_DESCS = new Set([
+  '단계 세부 정보 입력', '흐름의 출발점 · 현재 위치', '하나의 할 일·개념·과정', '여러 확인 항목을 가진 단계',
+  '중간 목표 · 달성 지점', '최종 목표 · 흐름의 끝', '두 갈래로 나뉘는 판단', '선택지가 3개 이상인 판단',
+  '교재·자격증·참고 자료', '실습·상담·면접 등 사람이 하는 일'
+]);
+
 export class State {
   constructor(projectManager) {
     this.projectManager = projectManager;
@@ -49,6 +56,8 @@ export class State {
     if (!proj) return;
 
     this.nodes = JSON.parse(JSON.stringify(proj.nodes || []));
+    // Older versions stored hint text as the real description; show those as empty
+    this.nodes.forEach(n => { if (PLACEHOLDER_DESCS.has(n.desc)) n.desc = ''; });
     this.edges = JSON.parse(JSON.stringify(proj.edges || []));
     this.notes = JSON.parse(JSON.stringify(proj.notes || []));
     this.viewport = proj.viewport ? { ...proj.viewport } : { x: 80, y: 80, zoom: 1 };
@@ -263,29 +272,51 @@ export class State {
     this.emit('canvas:change');
   }
 
-  duplicateSelectedNodes() {
-    if (this.selectedNodeIds.size === 0) return;
+  // Copy the selected nodes and the connections between them
+  copySelection() {
+    const ids = this.selectedNodeIds;
+    if (!ids.size) return null;
+    const nodes = this.nodes.filter(n => ids.has(n.id));
+    const edges = this.edges.filter(e => ids.has(e.from) && ids.has(e.to));
+    return JSON.parse(JSON.stringify({ nodes, edges }));
+  }
+
+  // Paste a copied group with fresh ids. `at` (world point) puts the group's top-left
+  // there; otherwise it is offset from the originals. The pasted nodes become the selection.
+  pasteNodes(clip, at = null, offset = 40) {
+    if (!clip || !Array.isArray(clip.nodes) || !clip.nodes.length) return [];
     this.pushHistory();
-    const newSelectedIds = new Set();
-
-    this.selectedNodeIds.forEach(id => {
-      const node = this.nodes.find(n => n.id === id);
-      if (node) {
-        const copy = {
-          ...JSON.parse(JSON.stringify(node)),
-          id: 'node_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-          title: `${node.title} (복사본)`,
-          x: node.x + 40,
-          y: node.y + 40
-        };
-        this.nodes.push(copy);
-        newSelectedIds.add(copy.id);
-      }
+    const minX = Math.min(...clip.nodes.map(n => n.x));
+    const minY = Math.min(...clip.nodes.map(n => n.y));
+    const dx = at ? Math.round(at.x - minX) : offset;
+    const dy = at ? Math.round(at.y - minY) : offset;
+    const idMap = new Map();
+    const stamp = Date.now().toString(36);
+    clip.nodes.forEach((n, i) => {
+      const id = `node_${stamp}_${i}_${Math.random().toString(36).slice(2, 6)}`;
+      idMap.set(n.id, id);
+      const copy = JSON.parse(JSON.stringify(n));
+      copy.id = id;
+      copy.x = n.x + dx;
+      copy.y = n.y + dy;
+      copy.status = 'idle';
+      this.nodes.push(copy);
     });
-
-    this.selectedNodeIds = newSelectedIds;
+    (clip.edges || []).forEach((e, i) => {
+      if (!idMap.has(e.from) || !idMap.has(e.to)) return;
+      this.edges.push({ ...JSON.parse(JSON.stringify(e)), id: `e_${stamp}_${i}_${Math.random().toString(36).slice(2, 6)}`, from: idMap.get(e.from), to: idMap.get(e.to) });
+    });
+    this.selectedNodeIds = new Set(idMap.values());
+    this.selectedEdgeId = null;
+    this.selectedNoteId = null;
     this.save();
+    this.emit('selection:change', { type: 'node', nodes: this.nodes.filter(n => this.selectedNodeIds.has(n.id)) });
     this.emit('canvas:change');
+    return [...idMap.values()];
+  }
+
+  duplicateSelectedNodes() {
+    this.pasteNodes(this.copySelection());
   }
 
   // Edge operations
@@ -320,6 +351,30 @@ export class State {
       this.emit('edge:updated', edge);
       this.emit('canvas:change');
     }
+  }
+
+  // Set / clear the "main route" flag on several edges as one undo step
+  setMainEdges(ids, on) {
+    const targets = this.edges.filter(e => ids.includes(e.id) && !!e.main !== on);
+    if (!targets.length) return;
+    this.pushHistory();
+    targets.forEach(e => { if (on) e.main = true; else delete e.main; });
+    this.save();
+    this.emit('canvas:change');
+  }
+
+  // First spot at or below (x, y) where a w×h box overlaps no node
+  freeSpot(x, y, w, h, gap = 40) {
+    const rects = this.nodes.map(n => {
+      const s = (this.measureNode && this.measureNode(n)) || { width: 260, height: 90 };
+      return { x: n.x, y: n.y, w: s.width, h: s.height };
+    });
+    for (let i = 0; i < 50; i++) {
+      const hit = rects.find(r => x < r.x + r.w + gap && x + w + gap > r.x && y < r.y + r.h + gap && y + h + gap > r.y);
+      if (!hit) break;
+      y = hit.y + hit.h + gap;
+    }
+    return { x: Math.round(x), y: Math.round(y) };
   }
 
   // Edge label; for an edge leaving an N-way decision the label is the branch name,

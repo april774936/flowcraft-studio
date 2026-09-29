@@ -251,3 +251,9 @@
 /* Simple mode hides automation-only inspector parts */
 .simple-mode .insp-ai-box,
 .simple-mode .insp-type { display: none; }
+
+/* Main route toggle */
+.insp-main-btn { width: 100%; justify-content: center; }
+.insp-main-btn.on { color: #fbbf24; border-color: rgba(251, 191, 36, 0.55); background: rgba(251, 191, 36, 0.08); }
+.insp-star { color: var(--text-muted); }
+.insp-star.on { color: #fbbf24; border-color: rgba(251, 191, 36, 0.55); }

@@ -447,7 +447,7 @@ export class Toolbar {
       this.simulator.clearLogs();
     });
 
-    // Global keyboard shortcuts (Cmd/Ctrl + Z, Y, D, Delete, ?, Backspace)
+    // Global keyboard shortcuts (Cmd/Ctrl + Z, Y, C, X, V, D, Delete, ?, Backspace)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
         return;
@@ -471,6 +471,31 @@ export class Toolbar {
         e.preventDefault();
         this.state.redo();
         soundFx.playSnap();
+      } else if (cmdKey && ['c', 'x'].includes(e.key.toLowerCase()) && this.state.selectedNodeIds.size > 0) {
+        // Copy / cut nodes (kept in localStorage so it also works across projects)
+        if (window.getSelection()?.toString()) return; // let normal text copy through
+        e.preventDefault();
+        const clip = this.state.copySelection();
+        this.clipboard = clip;
+        this.pasteCount = 0;
+        try { localStorage.setItem('flowcraft_clipboard', JSON.stringify(clip)); } catch (err) { /* storage full */ }
+        if (e.key.toLowerCase() === 'x') {
+          this.state.removeNodes(Array.from(this.state.selectedNodeIds));
+          soundFx.playDelete();
+        } else {
+          soundFx.playSnap();
+        }
+      } else if (cmdKey && e.key.toLowerCase() === 'v') {
+        let clip = null;
+        try { clip = JSON.parse(localStorage.getItem('flowcraft_clipboard') || 'null'); } catch (err) { /* bad data */ }
+        clip = clip || this.clipboard;
+        if (!clip || !clip.nodes || !clip.nodes.length) return;
+        e.preventDefault();
+        // Under the mouse when it is over the canvas, otherwise stepped offsets from the original
+        const at = this.canvas.lastPointerWorld && this.canvas.pointerInside ? this.canvas.lastPointerWorld : null;
+        this.pasteCount = (this.pasteCount || 0) + 1;
+        this.state.pasteNodes(clip, at, 40 * this.pasteCount);
+        soundFx.playPop();
       } else if (cmdKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         this.state.duplicateSelectedNodes();

@@ -195,6 +195,14 @@ export class Palette {
     this.contentArea.appendChild(container);
   }
 
+  // The palette description is a hint, not content: new nodes start with an empty
+  // description and the title selected, so typing replaces it.
+  createNode(item, x, y, avoidOverlap) {
+    const pos = avoidOverlap ? this.state.freeSpot(x, y, 260, 90) : { x: Math.round(x), y: Math.round(y) };
+    const node = this.state.addNode({ ...item, desc: '', ...pos });
+    this.state.emit('quick:edit-title', node.id);
+  }
+
   addItemAtCenter(item) {
     const container = this.canvas.container.getBoundingClientRect();
     const centerWorld = this.canvas.screenToWorld(
@@ -209,11 +217,7 @@ export class Palette {
         color: 'yellow'
       });
     } else {
-      this.state.addNode({
-        ...item,
-        x: Math.round(centerWorld.x - 110),
-        y: Math.round(centerWorld.y - 45)
-      });
+      this.createNode(item, centerWorld.x - 130, centerWorld.y - 45, true);
     }
   }
 
@@ -241,11 +245,7 @@ export class Palette {
             color: 'yellow'
           });
         } else {
-          this.state.addNode({
-            ...item,
-            x: Math.round(worldPos.x - 110),
-            y: Math.round(worldPos.y - 45)
-          });
+          this.createNode(item, worldPos.x - 130, worldPos.y - 45, false);
         }
       } catch (err) {
         console.error('Failed to drop item onto canvas', err);
