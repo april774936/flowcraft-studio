@@ -1,5 +1,6 @@
 // State.js: Central reactive state manager with history & event emitter
 import { normalizeChecklist, normalizeBranches, isBranchPort, branchIdOf, branchPort } from './Branches.js';
+import { defaultTimeline } from './Timeline.js';
 
 // Hint texts that older versions saved as a node's real description
 const PLACEHOLDER_DESCS = new Set([
@@ -17,6 +18,7 @@ export class State {
     this.nodes = [];
     this.edges = [];
     this.notes = [];
+    this.timeline = null; // time axis of a timeline board (see Timeline.js)
     this.viewport = { x: 80, y: 80, zoom: 1 };
 
     // Selection
@@ -60,6 +62,8 @@ export class State {
     this.nodes.forEach(n => { if (PLACEHOLDER_DESCS.has(n.desc)) n.desc = ''; });
     this.edges = JSON.parse(JSON.stringify(proj.edges || []));
     this.notes = JSON.parse(JSON.stringify(proj.notes || []));
+    // Time axis (timeline board): only when the project is in timeline mode
+    this.timeline = proj.mode === 'timeline' ? JSON.parse(JSON.stringify(proj.timeline || defaultTimeline(this.nodes))) : null;
     this.viewport = proj.viewport ? { ...proj.viewport } : { x: 80, y: 80, zoom: 1 };
 
     this.selectedNodeIds.clear();
@@ -70,7 +74,34 @@ export class State {
     this.gestureSnapshot = null;
 
     this.emit('project:loaded', proj);
+    this.emit('timeline:change', this.timeline);
     this.emit('canvas:change');
+  }
+
+  // Replace the time axis (null turns the timeline board off) — one undo step
+  setTimeline(timeline) {
+    this.pushHistory();
+    this.timeline = timeline ? JSON.parse(JSON.stringify(timeline)) : null;
+    this.save();
+    this.emit('timeline:change', this.timeline);
+    this.emit('canvas:change');
+  }
+
+  enableTimeline() {
+    if (this.timeline) return;
+    this.setTimeline(defaultTimeline(this.nodes));
+  }
+
+  // Column label at world x (for showing it on nodes)
+  timelineLabelAt(x) {
+    const tl = this.timeline;
+    if (!tl) return '';
+    let left = tl.originX;
+    for (const c of tl.cols) {
+      if (x >= left && x < left + c.w) return c.label;
+      left += c.w;
+    }
+    return '';
   }
 
   save() {
@@ -79,7 +110,9 @@ export class State {
       nodes: this.nodes,
       edges: this.edges,
       notes: this.notes,
-      viewport: this.viewport
+      viewport: this.viewport,
+      mode: this.timeline ? 'timeline' : 'flowchart',
+      timeline: this.timeline || undefined
     });
   }
 
@@ -87,8 +120,18 @@ export class State {
     return JSON.stringify({
       nodes: this.nodes,
       edges: this.edges,
-      notes: this.notes
+      notes: this.notes,
+      timeline: this.timeline
     });
+  }
+
+  applySnapshot(json) {
+    const data = JSON.parse(json);
+    this.nodes = data.nodes;
+    this.edges = data.edges;
+    this.notes = data.notes;
+    this.timeline = data.timeline || null;
+    this.emit('timeline:change', this.timeline);
   }
 
   pushHistory() {
@@ -127,17 +170,8 @@ export class State {
     if (this.historyStack.length === 0) return;
     this.isApplyingHistory = true;
 
-    const current = JSON.stringify({
-      nodes: this.nodes,
-      edges: this.edges,
-      notes: this.notes
-    });
-    this.redoStack.push(current);
-
-    const prev = JSON.parse(this.historyStack.pop());
-    this.nodes = prev.nodes;
-    this.edges = prev.edges;
-    this.notes = prev.notes;
+    this.redoStack.push(this.snapshot());
+    this.applySnapshot(this.historyStack.pop());
 
     this.selectedNodeIds.clear();
     this.selectedEdgeId = null;
@@ -153,17 +187,8 @@ export class State {
     if (this.redoStack.length === 0) return;
     this.isApplyingHistory = true;
 
-    const current = JSON.stringify({
-      nodes: this.nodes,
-      edges: this.edges,
-      notes: this.notes
-    });
-    this.historyStack.push(current);
-
-    const next = JSON.parse(this.redoStack.pop());
-    this.nodes = next.nodes;
-    this.edges = next.edges;
-    this.notes = next.notes;
+    this.historyStack.push(this.snapshot());
+    this.applySnapshot(this.redoStack.pop());
 
     this.isApplyingHistory = false;
     this.save();

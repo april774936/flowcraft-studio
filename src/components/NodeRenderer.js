@@ -132,9 +132,13 @@ export class NodeRenderer {
       // Roadmap info: period chip + status pill; finished steps are dimmed
       const progress = PROGRESS_STATES.find(p => p.key === node.progress);
       if (progress) el.classList.add(`progress-${progress.key}`);
-      const metaHtml = (node.period || progress) && shape !== 'decision' && !COMPACT_SHAPES.includes(shape) ? `
+      // Timeline board: without its own period, a node can show the column it sits in
+      const tl = this.state.timeline;
+      const autoPeriod = !node.period && tl && tl.showOnNodes ? this.state.timelineLabelAt(node.x + 40) : '';
+      const metaHtml = (node.period || autoPeriod || progress) && shape !== 'decision' && !COMPACT_SHAPES.includes(shape) ? `
         <div class="node-meta">
           ${node.period ? `<span class="node-period">${this.escapeHtml(node.period)}</span>` : ''}
+          ${autoPeriod ? `<span class="node-period auto" title="시간축 칸">${this.escapeHtml(autoPeriod)}</span>` : ''}
           ${progress ? `<span class="node-progress-pill p-${progress.key}">${progress.key === 'done' ? '✓ ' : ''}${progress.label}</span>` : ''}
         </div>` : '';
 
@@ -315,9 +319,6 @@ export class NodeRenderer {
         const dx = currentWorld.x - this.dragNodesState.startWorldX;
         const dy = currentWorld.y - this.dragNodesState.startWorldY;
 
-        const proj = this.state.getActiveProject ? this.state.getActiveProject() : null;
-        const isTimeline = proj && proj.mode === 'timeline';
-
         let guideSnappedX = false;
         let guideSnappedY = false;
 
@@ -326,13 +327,6 @@ export class NodeRenderer {
           if (node) {
             let targetX = Math.round(item.origX + dx);
             let targetY = Math.round(item.origY + dy);
-
-            // Snap logic in timeline mode
-            if (isTimeline && this.timelineRuler) {
-              const absoluteX = item.origX + dx;
-              const snappedX = this.timelineRuler.snapToColumn(absoluteX);
-              targetX = Math.round(snappedX);
-            }
 
             // Alignment Snapping with other nodes (threshold: 6px)
             const snapThreshold = 6;
