@@ -134,6 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboard.open();
   });
 
+  // The FlowCraft logo (icon + text) also goes home
+  const logoHome = document.getElementById('logo-home');
+  logoHome?.addEventListener('click', () => dashboard.open());
+  logoHome?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dashboard.open(); }
+  });
+
   // 고급 기능 toggle (automation UI: AI, run simulation, webhook/API palette)
   const advBtn = document.getElementById('btn-advanced-toggle');
   const syncAdvBtn = () => {
