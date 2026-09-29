@@ -34,6 +34,18 @@
     origSetItem(CODE_KEY, code);
   }
 
+  // Setup link: opening the site with ?sync=<code> adopts that sync code on this device
+  // (then removes it from the address bar so it isn't left in history/bookmarks)
+  try {
+    const url = new URL(location.href);
+    const linkCode = (url.searchParams.get('sync') || '').trim();
+    if (linkCode) {
+      setSyncCode(linkCode);
+      url.searchParams.delete('sync');
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
+  } catch (e) { /* ignore malformed URLs */ }
+
   function parseJSON(str, fallback) {
     if (typeof str !== 'string') return fallback;
     try {
