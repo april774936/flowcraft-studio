@@ -16,7 +16,6 @@ export class AIModal {
     this.progressStatus = document.getElementById('ai-progress-status');
     this.progressSubstatus = document.getElementById('ai-progress-substatus');
 
-    this.optAutolayout = document.getElementById('ai-opt-autolayout');
     this.optClear = document.getElementById('ai-opt-clear');
 
     this.initEvents();
@@ -66,48 +65,37 @@ export class AIModal {
   async generate() {
     const promptText = this.promptInput.value.trim();
     if (!promptText) {
-      alert('생성할 워크플로우에 대한 설명이나 프롬프트를 입력해주세요.');
+      alert('만들 흐름을 적어주세요. 예: 대학원 진학 → 졸업 → 취업 / 박사 / 연구원');
       this.promptInput.focus();
       return;
     }
+    if (this.busy) return;
+    this.busy = true;
 
-    // Switch to generating progress view
     this.formView.style.display = 'none';
     this.generatingView.style.display = 'flex';
+    this.progressStatus.textContent = 'AI가 흐름을 설계하고 있어요…';
+    this.progressSubstatus.textContent = '단계 · 분기 · 체크리스트 · 기간을 정리하는 중 (10~30초)';
 
     try {
-      // Progress step 1
-      this.progressStatus.textContent = '비즈니스 흐름 및 조건 분기 분석 중...';
-      this.progressSubstatus.textContent = '문맥에서 트리거, 태스크, 분기 조건을 추출하고 있습니다';
-      await this.sleep(400);
-
-      // Progress step 2
-      this.progressStatus.textContent = '노드 및 스마트 연결선 구조 생성 중...';
-      this.progressSubstatus.textContent = '각 단계별 최적의 아이콘과 포트를 매핑하고 있습니다';
-      await this.sleep(450);
-
-      // Progress step 3: Execution
-      this.progressStatus.textContent = '위계적 자동 정렬 및 캔버스 배치 중...';
-      this.progressSubstatus.textContent = '노드가 겹치지 않도록 깔끔하게 배치합니다';
-
-      const options = {
-        clear: this.optClear ? this.optClear.checked : true,
-        autolayout: this.optAutolayout ? this.optAutolayout.checked : true
-      };
-
-      await this.aiEngine.generateDraft(promptText, options);
-      await this.sleep(300);
-
-      // Fit view
-      const mainRect = this.canvas.container.getBoundingClientRect();
-      this.state.fitToContent(mainRect.width, mainRect.height);
-
-      this.showToast('✨ AI 워크플로우 초안이 성공적으로 생성되었습니다!');
+      const result = await this.aiEngine.generateDraft(promptText, {
+        clear: this.optClear ? this.optClear.checked : true
+      });
+      // Fit once the new nodes are rendered (their real sizes count)
+      requestAnimationFrame(() => {
+        const mainRect = this.canvas.container.getBoundingClientRect();
+        this.state.fitToContent(mainRect.width, mainRect.height);
+      });
+      const who = result.source === 'claude' ? 'Claude AI로' : result.source === 'gemini' ? 'Gemini AI로'
+        : result.note ? '기본 규칙으로' : '기본 규칙으로(AI 키 없음)';
+      this.showToast(`✨ ${who} ${result.count}개 단계를 만들었어요${result.note ? ' · ' + result.note : ''}`);
       this.close();
     } catch (err) {
-      alert('AI 생성 중 오류가 발생했습니다: ' + err.message);
+      alert(err.message);
       this.formView.style.display = 'flex';
       this.generatingView.style.display = 'none';
+    } finally {
+      this.busy = false;
     }
   }
 
