@@ -505,6 +505,46 @@ body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-selec
 .tl-pop-hint { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
 .tl-pop-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
 
+/* Step axis (x1, x2 …): point markers instead of columns */
+.timeline-header.point-mode { height: 54px; }
+.tl-point {
+  position: absolute;
+  top: 6px;
+  margin-left: -44px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  max-width: 220px;
+  padding: 3px 12px 4px;
+  border-radius: 9px;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface-elevated);
+  cursor: ew-resize;
+  user-select: none;
+  white-space: nowrap;
+}
+.tl-point::after { /* pin down to the axis line */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 9px;
+  height: 9px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--primary-light);
+  border-radius: 2px;
+}
+.tl-point:hover { border-color: var(--primary); }
+.tl-point-name { font-size: 13.5px; font-weight: 800; color: var(--primary-light); cursor: ew-resize; }
+.tl-point-cap { font-size: 12px; font-weight: 600; color: var(--text-primary); max-width: 196px; overflow: hidden; text-overflow: ellipsis; }
+.tl-point .tl-del { top: -7px; right: -7px; background: var(--bg-surface-elevated); border: 1px solid var(--border-medium); }
+.tl-point:hover .tl-del { opacity: 1; }
+.tl-point .tl-label-input { min-width: 170px; font-size: 13px; }
+.point-mode .tl-add { top: 13px; }
+.tl-line.tl-point-line { border-left: 1.5px dashed rgba(129, 140, 248, 0.45); }
+
 #btn-timeline-toggle.on { color: var(--primary-light); border-color: var(--primary); background: rgba(99, 102, 241, 0.12); }
 
 .dock-btn.active {

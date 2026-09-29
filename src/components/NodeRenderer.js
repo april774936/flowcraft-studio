@@ -3,6 +3,7 @@ import { Icons } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
 import { branchPort, branchPortPoint } from '../core/Branches.js';
 import { computeMainPath } from '../core/MainPath.js';
+import { nearestPoint } from '../core/Timeline.js';
 import { isSecondClick } from '../utils/doubleClick.js';
 
 const MAX_VISIBLE_CHECKS = 8;
@@ -134,7 +135,7 @@ export class NodeRenderer {
       if (progress) el.classList.add(`progress-${progress.key}`);
       // Timeline board: without its own period, a node can show the column it sits in
       const tl = this.state.timeline;
-      const autoPeriod = !node.period && tl && tl.showOnNodes ? this.state.timelineLabelAt(node.x + 40) : '';
+      const autoPeriod = !node.period && tl && tl.showOnNodes ? this.state.timelineLabelAt(node.x + (tl.unit === 'point' ? 130 : 40)) : '';
       const metaHtml = (node.period || autoPeriod || progress) && shape !== 'decision' && !COMPACT_SHAPES.includes(shape) ? `
         <div class="node-meta">
           ${node.period ? `<span class="node-period">${this.escapeHtml(node.period)}</span>` : ''}
@@ -344,6 +345,18 @@ export class NodeRenderer {
                 }
               }
             });
+
+            // Step axis: a single dragged node centres itself on a nearby point (x1, x2 …)
+            const tl = this.state.timeline;
+            if (tl && tl.unit === 'point' && this.dragNodesState.nodes.length === 1) {
+              const w = (this.state.measureNode(node) || { width: 260 }).width;
+              const p = nearestPoint(tl, targetX + w / 2, 28);
+              if (p) {
+                targetX = Math.round(p.x - w / 2);
+                this.canvas.showGuide('y', p.x);
+                guideSnappedY = true;
+              }
+            }
 
             node.x = targetX;
             node.y = targetY;
