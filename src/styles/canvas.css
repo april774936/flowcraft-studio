@@ -308,53 +308,204 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
   color: var(--text-primary);
 }
 
-/* Timeline Ruler Mode */
+/* ---------- Timeline board: time axis ---------- */
+/* World layer (behind nodes): column bands + boundary lines */
 .timeline-ruler {
   position: absolute;
-  top: 0;
   left: 0;
-  width: 10000px;
-  height: 60px;
-  border-bottom: 2px solid var(--border-medium);
-  z-index: 10;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
   pointer-events: none;
 }
+.tl-band {
+  position: absolute;
+  top: -20000px;
+  height: 40000px;
+  background: rgba(99, 102, 241, 0.035);
+}
+.tl-band.odd { background: rgba(148, 163, 184, 0.025); }
+.tl-line {
+  position: absolute;
+  top: -20000px;
+  height: 40000px;
+  width: 0;
+  border-left: 1.5px dashed rgba(148, 163, 184, 0.28);
+}
 
-.timeline-step {
+/* Header pinned to the top of the canvas, follows pan/zoom horizontally */
+.timeline-header {
   position: absolute;
   top: 0;
-  height: 5000px;
-  width: 1px;
+  left: 0;
+  right: 0;
+  height: 42px;
+  z-index: 25;
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border-medium);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
 }
-
-.timeline-step-label {
+.tl-track {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  inset: 0 0 0 44px;
+  overflow: hidden;
+}
+.tl-cell {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  margin-left: -44px; /* track starts after the settings button */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--border-medium);
+  box-sizing: border-box;
+  padding: 0 14px;
+}
+.tl-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+  user-select: none;
+}
+.tl-cell.narrow .tl-label { font-size: 11.5px; }
+.tl-label-input {
+  width: 100%;
+  min-width: 60px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 3px 6px;
+  outline: none;
+}
+.tl-del {
+  position: absolute;
+  top: 3px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+.tl-cell:hover .tl-del { opacity: 1; }
+.tl-del:hover { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
+.tl-cell.narrow .tl-del { display: none; }
+
+/* Resize handles: right edge of every cell, left edge of the first */
+.tl-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+}
+.tl-handle::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  opacity: 0.5;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+.tl-handle:hover::after,
+body.tl-resizing .tl-handle::after { opacity: 1; background: var(--primary-light); }
+.tl-handle-start { right: auto; left: -6px; }
+body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-select: none; }
+
+.tl-add {
+  position: absolute;
+  top: 8px;
+  margin-left: -44px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+}
+.tl-add:hover { color: #fff; background: var(--primary); border-style: solid; }
+
+.tl-settings-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-right: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 3;
+}
+.tl-settings-btn:hover { color: var(--primary-light); }
+
+.tl-popover {
+  position: absolute;
+  top: 48px;
+  left: 8px;
+  width: 270px;
+  padding: 14px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  z-index: 30;
+}
+.tl-popover[hidden] { display: none; }
+.tl-pop-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.tl-pop-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+.tl-pop-row[hidden] { display: none; }
+.tl-pop-row span { width: 44px; flex-shrink: 0; }
+.tl-pop-row select,
+.tl-pop-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
+  border-radius: 7px;
 }
+.tl-pop-btn { width: 100%; justify-content: center; font-size: 13px; }
+.tl-pop-btn.danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+.tl-pop-hint { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+.tl-pop-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
 
-.timeline-step-line {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  width: 2px;
-  height: 5000px;
-  background: var(--border-medium);
-  opacity: 0.5;
-}
-
-.canvas-grid.timeline-mode {
-  background-size: 320px 40px;
-  background-image: linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
-}
+#btn-timeline-toggle.on { color: var(--primary-light); border-color: var(--primary); background: rgba(99, 102, 241, 0.12); }
 
 .dock-btn.active {
   background: var(--primary);

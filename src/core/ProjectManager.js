@@ -1,4 +1,5 @@
 // ProjectManager: Manages multiple workflows by project
+import { buildColumns } from './Timeline.js';
 
 // Sample projects use a fixed, old timestamp so that on a fresh device they
 // never win a sync merge against the user's edited copies.
@@ -91,6 +92,7 @@ export class ProjectManager {
       edges: initialData.edges || [],
       notes: initialData.notes || []
     };
+    if (initialData.timeline) newProject.timeline = initialData.timeline;
 
     this.projects.unshift(newProject);
     this.activeProjectId = id;
@@ -181,6 +183,9 @@ export class ProjectManager {
       if (notes !== undefined) proj.notes = notes;
       if (viewport !== undefined) proj.viewport = viewport;
       if (arguments[0].mode !== undefined) proj.mode = arguments[0].mode;
+      if ('timeline' in arguments[0]) {
+        if (arguments[0].timeline) proj.timeline = arguments[0].timeline; else delete proj.timeline;
+      }
       proj.updatedAt = new Date().toISOString();
       this.saveProjects();
     }
@@ -603,8 +608,13 @@ export class ProjectManager {
     }
 
     if (key === 'timeline_basic') {
+      const year = new Date().getFullYear();
       return {
         mode: 'timeline',
+        timeline: {
+          unit: 'quarter', start: `${year}-Q1`, originX: 120, showOnNodes: false,
+          cols: buildColumns('quarter', `${year}-Q1`, 4, 400)
+        },
         nodes: [
           { id: 't1', type: 'start', title: 'Q1 계획', desc: '요구사항 분석', x: 200, y: 200, color: '#10b981', status: 'idle' },
           { id: 't2', type: 'action', title: 'Q2 개발', desc: 'MVP 개발', x: 600, y: 200, color: '#3b82f6', status: 'idle' },

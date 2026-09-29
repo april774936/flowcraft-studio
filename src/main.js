@@ -33,7 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const marquee = document.getElementById('selection-marquee');
 
   const canvas = new Canvas(state, container, world, grid, guideX, guideY, marquee);
-  const timelineRuler = new TimelineRuler(state, document.getElementById('timeline-ruler'), world);
+  const timelineRuler = new TimelineRuler(state, document.getElementById('timeline-ruler'), world, container);
+
+  // Time axis on/off (timeline board)
+  const tlBtn = document.getElementById('btn-timeline-toggle');
+  const syncTlBtn = () => {
+    tlBtn?.classList.toggle('on', !!state.timeline);
+    tlBtn?.setAttribute('aria-pressed', String(!!state.timeline));
+  };
+  tlBtn?.addEventListener('click', () => {
+    if (state.timeline) state.setTimeline(null);
+    else state.enableTimeline();
+  });
+  state.on('timeline:change', syncTlBtn);
+  syncTlBtn();
 
   // 3. SVG Connections
   const svg = document.getElementById('connections-svg');
