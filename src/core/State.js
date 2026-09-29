@@ -1,6 +1,6 @@
 // State.js: Central reactive state manager with history & event emitter
 import { normalizeChecklist, normalizeBranches, isBranchPort, branchIdOf, branchPort } from './Branches.js';
-import { defaultTimeline } from './Timeline.js';
+import { defaultTimeline, nearestPoint, pointText } from './Timeline.js';
 
 // Hint texts that older versions saved as a node's real description
 const PLACEHOLDER_DESCS = new Set([
@@ -96,6 +96,10 @@ export class State {
   timelineLabelAt(x) {
     const tl = this.timeline;
     if (!tl) return '';
+    if (tl.unit === 'point') { // step axis: the point the node sits on
+      const p = nearestPoint(tl, x, 80);
+      return p ? pointText(tl.cols[p.idx]) : '';
+    }
     let left = tl.originX;
     for (const c of tl.cols) {
       if (x >= left && x < left + c.w) return c.label;

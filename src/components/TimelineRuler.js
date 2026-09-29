@@ -4,9 +4,11 @@
 //   left edge to move where the axis starts. Double-click a label to rename it.
 // - Column bands + boundary lines are drawn in world space behind the nodes.
 // Nodes stay where they are when columns are resized (free placement).
-import { UNITS, MIN_COL_W, DEFAULT_COL_W, labelFor, buildColumns, newColId, defaultStart } from '../core/Timeline.js';
+import { UNITS, MIN_COL_W, DEFAULT_COL_W, labelFor, buildColumns, newColId, defaultStart, columnStarts } from '../core/Timeline.js';
 
-const START_HINT = { week: '2026-10-05 (시작 주 월요일)', month: '2026-10', quarter: '2026-Q4', year: '2026', custom: '' };
+const POINT_GAP = 280;
+
+const START_HINT = { point: '', week: '2026-10-05 (시작 주 월요일)', month: '2026-10', quarter: '2026-Q4', year: '2026', custom: '' };
 
 export class TimelineRuler {
   constructor(state, linesEl, worldElement, container) {
@@ -50,6 +52,8 @@ export class TimelineRuler {
     this.header.style.display = tl ? '' : 'none';
     this.lines.style.display = tl ? '' : 'none';
     if (!tl) { this.closePopover(); return; }
+    this.header.classList.toggle('point-mode', tl.unit === 'point');
+    if (tl.unit === 'point') { this.renderPoints(); return; }
 
     // World layer: alternating bands + boundary lines
     let x = tl.originX;
@@ -79,12 +83,44 @@ export class TimelineRuler {
     if (!this.popover.hidden) this.renderPopover();
   }
 
+  // Step axis: a marker per point (name + caption), dashed line through the board
+  renderPoints() {
+    const tl = this.tl;
+    const xs = columnStarts(tl);
+    this.lines.innerHTML = xs.map((x, i) => `<div class="tl-line tl-point-line" style="left:${x}px"></div>` +
+      (i < xs.length - 1 ? `<div class="tl-band ${i % 2 ? 'odd' : ''}" style="left:${x}px;width:${tl.cols[i].w}px"></div>` : '')).join('');
+    this.track.innerHTML = tl.cols.map((c, i) => `
+      <div class="tl-point" data-idx="${i}" title="드래그: 위치 조절 · 더블클릭: 이름/설명 (예: x1: 대학원 진학)">
+        <span class="tl-point-name tl-label">${this.escape(c.label)}</span>
+        ${c.caption ? `<span class="tl-point-cap">${this.escape(c.caption)}</span>` : ''}
+        <button class="tl-del" data-del="${i}" title="이 지점 삭제">×</button>
+      </div>`).join('') + `<button class="tl-add" title="지점 추가">＋</button>`;
+    this.track.querySelectorAll('.tl-point').forEach(el => {
+      const i = Number(el.dataset.idx);
+      el.addEventListener('mousedown', (e) => { if (!e.target.closest('.tl-del, input')) this.startDrag(e, 'point', i); });
+      el.addEventListener('dblclick', (e) => { if (!e.target.closest('.tl-del')) this.editLabel(i); });
+    });
+    this.track.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => this.removeCol(Number(b.dataset.del))));
+    this.track.querySelector('.tl-add').addEventListener('click', () => this.addCol());
+    this.track.querySelectorAll('.tl-del, .tl-add').forEach(b => b.addEventListener('mousedown', (e) => e.stopPropagation()));
+    this.position();
+    if (!this.popover.hidden) this.renderPopover();
+  }
+
   // Place header cells for the current pan/zoom
   position() {
     const tl = this.tl;
     if (!tl) return;
     const { x: vx, zoom } = this.state.viewport;
     this.track.scrollLeft = 0; // focusing a label input can scroll the clipped strip
+    if (tl.unit === 'point') {
+      const xs = columnStarts(tl);
+      this.track.querySelectorAll('.tl-point').forEach((el, i) => { el.style.left = `${vx + xs[i] * zoom}px`; });
+      const add = this.track.querySelector('.tl-add');
+      const lastX = xs[xs.length - 1] + tl.cols[tl.cols.length - 1].w * 0.5;
+      if (add) add.style.left = `${vx + lastX * zoom}px`;
+      return;
+    }
     let left = tl.originX;
     const cells = this.track.querySelectorAll('.tl-cell');
     tl.cols.forEach((c, i) => {
@@ -105,7 +141,8 @@ export class TimelineRuler {
     e.preventDefault();
     e.stopPropagation();
     const c = this.tl.cols[idx];
-    this.drag = { kind, idx, x: e.clientX, w: c.w, origin: this.tl.originX };
+    const prev = this.tl.cols[idx - 1];
+    this.drag = { kind, idx, x: e.clientX, w: c.w, prevW: prev ? prev.w : 0, origin: this.tl.originX };
     this.state.beginGesture();
     document.body.classList.add('tl-resizing');
   }
@@ -115,6 +152,23 @@ export class TimelineRuler {
     if (!d || !this.tl) return;
     const dx = (e.clientX - d.x) / this.state.viewport.zoom;
     const col = this.tl.cols[d.idx];
+    if (d.kind === 'point') {
+      // Move one point between its neighbours; the others stay where they are
+      const cols = this.tl.cols;
+      if (d.idx === 0) {
+        const move = Math.min(dx, d.w - MIN_COL_W);
+        this.tl.originX = Math.round(d.origin + move);
+        cols[0].w = Math.round(d.w - move);
+      } else {
+        const last = d.idx === cols.length - 1;
+        let move = Math.max(dx, MIN_COL_W - d.prevW);          // keep the gap before it
+        if (!last) move = Math.min(move, d.w - MIN_COL_W);      // and the gap after it
+        cols[d.idx - 1].w = Math.round(d.prevW + move);
+        cols[d.idx].w = last ? d.w : Math.round(d.w - move);
+      }
+      this.render();
+      return;
+    }
     if (d.kind === 'w') {
       col.w = Math.round(Math.max(MIN_COL_W, d.w + dx));
     } else {
@@ -142,13 +196,17 @@ export class TimelineRuler {
   }
 
   editLabel(idx) {
-    const cell = this.track.querySelector(`.tl-cell[data-idx="${idx}"]`);
+    const cell = this.track.querySelector(`.tl-cell[data-idx="${idx}"], .tl-point[data-idx="${idx}"]`);
     const label = cell && cell.querySelector('.tl-label');
+    cell?.querySelector('.tl-point-cap')?.remove();
     if (!label) return;
+    const isPoint = this.tl.unit === 'point';
+    const col = this.tl.cols[idx];
     const input = document.createElement('input');
     input.className = 'tl-label-input';
-    input.value = this.tl.cols[idx].label;
-    input.maxLength = 40;
+    input.value = isPoint ? (col.caption ? `${col.label}: ${col.caption}` : `${col.label}: `) : col.label;
+    input.placeholder = isPoint ? 'x1: 대학원 진학' : '';
+    input.maxLength = 60;
     label.replaceWith(input);
     input.focus({ preventScroll: true });
     this.track.scrollLeft = 0;
@@ -158,7 +216,15 @@ export class TimelineRuler {
       if (done) return;
       done = true;
       const v = input.value.trim();
-      if (commit && v && v !== this.tl.cols[idx].label) this.update(t => { t.cols[idx].label = v; });
+      if (commit && v && isPoint) {
+        // "이름: 설명" — the part before the first colon is the point name
+        const m = /^([^:：]*)[:：]\s*(.*)$/.exec(v);
+        const label = (m ? m[1] : v).trim() || col.label;
+        const caption = m ? m[2].trim() : '';
+        if (label !== col.label || caption !== (col.caption || '')) {
+          this.update(t => { t.cols[idx].label = label; if (caption) t.cols[idx].caption = caption; else delete t.cols[idx].caption; });
+        } else this.render();
+      } else if (commit && v && v !== col.label) this.update(t => { t.cols[idx].label = v; });
       else this.render();
     };
     input.addEventListener('keydown', (ev) => {
@@ -173,13 +239,19 @@ export class TimelineRuler {
   addCol() {
     this.update(t => {
       const last = t.cols[t.cols.length - 1];
+      if (t.unit === 'point' && last) last.w = Math.max(last.w, MIN_COL_W); // trailing gap becomes the new point's spacing
       t.cols.push({ id: newColId(), label: labelFor(t.unit, t.start, t.cols.length), w: last ? last.w : DEFAULT_COL_W });
     });
   }
 
   removeCol(idx) {
     if (this.tl.cols.length <= 1) return;
-    this.update(t => { t.cols.splice(idx, 1); });
+    this.update(t => {
+      // Step axis: the removed point's gap goes to the one before, so later points stay put
+      if (t.unit === 'point' && idx > 0) t.cols[idx - 1].w += t.cols[idx].w;
+      else if (t.unit === 'point' && idx === 0) t.originX += t.cols[0].w;
+      t.cols.splice(idx, 1);
+    });
   }
 
   // ---------- settings popover ----------
@@ -198,16 +270,18 @@ export class TimelineRuler {
       <label class="tl-pop-row"><span>단위</span>
         <select id="tl-unit">${UNITS.map(u => `<option value="${u.key}" ${u.key === tl.unit ? 'selected' : ''}>${u.label}</option>`).join('')}</select>
       </label>
-      <label class="tl-pop-row" ${tl.unit === 'custom' ? 'hidden' : ''}><span>시작</span>
+      <label class="tl-pop-row" ${tl.unit === 'custom' || tl.unit === 'point' ? 'hidden' : ''}><span>시작</span>
         <input id="tl-start" value="${this.escape(tl.start || '')}" placeholder="${START_HINT[tl.unit] || ''}" />
       </label>
-      <label class="tl-pop-row"><span>칸 수</span>
+      <label class="tl-pop-row"><span>${tl.unit === 'point' ? '지점 수' : '칸 수'}</span>
         <input id="tl-count" type="number" min="1" max="120" value="${tl.cols.length}" />
       </label>
-      <button class="btn-primary tl-pop-btn" id="tl-apply">칸 이름 다시 만들기</button>
-      <div class="tl-pop-hint">칸 폭은 그대로 두고 이름·개수만 바꿉니다. 이름은 머리글 더블클릭으로 하나씩 바꿀 수도 있어요.</div>
-      <button class="btn-secondary tl-pop-btn" id="tl-even">칸 폭 똑같이</button>
-      <label class="tl-pop-check"><input type="checkbox" id="tl-show" ${tl.showOnNodes ? 'checked' : ''} /> 노드에 칸 이름 표시</label>
+      <button class="btn-primary tl-pop-btn" id="tl-apply">${tl.unit === 'point' ? '지점 이름 다시 만들기' : '칸 이름 다시 만들기'}</button>
+      <div class="tl-pop-hint">${tl.unit === 'point'
+        ? '간격과 설명은 그대로 두고 이름(x1, x2 …)·개수만 바꿉니다. 지점을 더블클릭해 “x1: 대학원 진학”처럼 입력하고, 끌어서 간격을 조절하세요.'
+        : '칸 폭은 그대로 두고 이름·개수만 바꿉니다. 이름은 머리글 더블클릭으로 하나씩 바꿀 수도 있어요.'}</div>
+      <button class="btn-secondary tl-pop-btn" id="tl-even">${tl.unit === 'point' ? '간격 똑같이' : '칸 폭 똑같이'}</button>
+      <label class="tl-pop-check"><input type="checkbox" id="tl-show" ${tl.showOnNodes ? 'checked' : ''} /> ${tl.unit === 'point' ? '노드에 지점 이름 표시' : '노드에 칸 이름 표시'}</label>
       <button class="btn-secondary tl-pop-btn danger" id="tl-off">시간축 끄기</button>`;
     const $ = (id) => this.popover.querySelector(id);
     $('#tl-unit').addEventListener('change', (e) => {
@@ -215,15 +289,21 @@ export class TimelineRuler {
       const start = unit === tl.unit ? tl.start : defaultStart(unit);
       $('#tl-start').value = start;
       $('#tl-start').placeholder = START_HINT[unit] || '';
-      $('#tl-start').closest('.tl-pop-row').hidden = unit === 'custom';
+      $('#tl-start').closest('.tl-pop-row').hidden = unit === 'custom' || unit === 'point';
     });
     $('#tl-apply').addEventListener('click', () => {
       const unit = $('#tl-unit').value;
       const start = $('#tl-start').value.trim() || defaultStart(unit);
       const count = Math.max(1, Math.min(120, Number($('#tl-count').value) || tl.cols.length));
       this.update(t => {
-        const fresh = buildColumns(unit, start, count);
-        t.cols = fresh.map((c, i) => (t.cols[i] ? { ...t.cols[i], label: c.label } : { ...c, w: t.cols[t.cols.length - 1]?.w || DEFAULT_COL_W }));
+        const fresh = buildColumns(unit, start, count, unit === 'point' ? POINT_GAP : DEFAULT_COL_W);
+        const leavingPoint = t.unit === 'point' && unit !== 'point';
+        t.cols = fresh.map((c, i) => {
+          if (!t.cols[i]) return { ...c, w: t.cols[t.cols.length - 1]?.w || c.w };
+          const kept = { ...t.cols[i], label: c.label };
+          if (leavingPoint) delete kept.caption;
+          return kept;
+        });
         t.unit = unit;
         t.start = start;
       });
