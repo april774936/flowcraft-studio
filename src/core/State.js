@@ -1,4 +1,6 @@
 // State.js: Central reactive state manager with history & event emitter
+import { normalizeChecklist, normalizeBranches, isBranchPort, branchIdOf, branchPort } from './Branches.js';
+
 export class State {
   constructor(projectManager) {
     this.projectManager = projectManager;
@@ -185,6 +187,12 @@ export class State {
       status: 'idle',
       memo: nodeData.memo || ''
     };
+    if (nodeData.period) node.period = nodeData.period;
+    if (nodeData.progress) node.progress = nodeData.progress;
+    const checklist = normalizeChecklist(nodeData.checklist);
+    if (checklist.length) node.checklist = checklist;
+    const branches = normalizeBranches(nodeData.branches);
+    if (branches && branches.length) node.branches = branches;
     this.nodes.push(node);
     this.selectNode(id, false);
     this.save();
@@ -202,6 +210,35 @@ export class State {
       this.emit('node:updated', node);
       this.emit('canvas:change');
     }
+  }
+
+  // Replace a decision node's branch list in one undo step. Edges keep following
+  // their branch (labels are renamed), edges of removed branches are deleted, and a
+  // legacy Yes/No node's right/bottom edges are migrated to the 'yes'/'no' branches.
+  updateBranches(nodeId, branches) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    this.pushHistory();
+    const wasLegacy = !Array.isArray(node.branches);
+    node.branches = branches.map(b => ({ id: b.id, label: b.label }));
+    const byId = new Map(node.branches.map(b => [b.id, b]));
+    this.edges = this.edges.filter(e => {
+      if (e.from !== nodeId) return true;
+      if (wasLegacy && (e.fromPort === 'right' || e.fromPort === 'bottom')) {
+        const legacyId = e.fromPort === 'right' ? 'yes' : 'no';
+        if (!byId.has(legacyId)) return false;
+        e.fromPort = branchPort(legacyId);
+      }
+      if (isBranchPort(e.fromPort)) {
+        const b = byId.get(branchIdOf(e.fromPort));
+        if (!b) return false;
+        e.label = b.label;
+      }
+      return true;
+    });
+    this.save();
+    this.emit('node:updated', node);
+    this.emit('canvas:change');
   }
 
   removeNode(id) {
@@ -282,6 +319,20 @@ export class State {
       this.save();
       this.emit('edge:updated', edge);
       this.emit('canvas:change');
+    }
+  }
+
+  // Edge label; for an edge leaving an N-way decision the label is the branch name,
+  // so the branch is renamed (keeps every edge of that branch in sync)
+  setEdgeLabel(id, label) {
+    const edge = this.edges.find(e => e.id === id);
+    if (!edge || label === (edge.label || '')) return;
+    const from = this.nodes.find(n => n.id === edge.from);
+    if (from && isBranchPort(edge.fromPort) && Array.isArray(from.branches) && label) {
+      const bid = branchIdOf(edge.fromPort);
+      this.updateBranches(from.id, from.branches.map(b => (b.id === bid ? { ...b, label } : b)));
+    } else {
+      this.updateEdge(id, { label });
     }
   }
 

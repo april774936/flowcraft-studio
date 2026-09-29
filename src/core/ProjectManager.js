@@ -439,6 +439,169 @@ export class ProjectManager {
     if (key === 'ecommerce') return templates[0];
     if (key === 'cicd') return templates[1];
     
+    // ---- Purpose templates: career roadmap / study flow / exam plan ----
+    const TN = (id, type, icon, title, x, y, color, extra = {}) =>
+      ({ id, type, category: type, icon, title, desc: '', x, y, color, status: 'idle', memo: '', ...extra });
+    const TC = (...items) => items.map((text, i) => ({ id: `ck${i}`, text, done: false }));
+    const TE = (id, from, fromPort, to, toPort, label = '') => ({ id, from, fromPort, to, toPort, label, lineType: 'orthogonal' });
+
+    if (key === 'career') {
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 60, zoom: 0.8 },
+        nodes: [
+          TN('cr_now', 'start', 'start', '현재 위치', 40, 300, '#10b981', { period: '2026 Q3', progress: 'done', desc: '직무 · 연차 · 강점' }),
+          TN('cr_diag', 'action', 'check', '역량 진단', 360, 230, '#10b981', {
+            period: '2026.10', progress: 'active',
+            checklist: TC('보유 자격증 · 스킬 정리', '목표 직무 채용공고 5개 분석', '부족한 역량 목록화')
+          }),
+          TN('cr_short', 'milestone', 'flag', '단기 목표 (6개월)', 780, 220, '#f59e0b', {
+            period: '~2027.03', progress: 'planned',
+            checklist: TC('자격증 1개 취득', '포트폴리오 1개 완성', '관련 스터디 참여')
+          }),
+          TN('cr_path', 'condition', 'condition', '어떤 경로로?', 1200, 262, '#8b5cf6', {
+            branches: [{ id: 'deep', label: '현 직무 심화' }, { id: 'switch', label: '직무 전환' }, { id: 'grad', label: '대학원 진학' }]
+          }),
+          TN('cr_deep', 'action', 'action', '사내 핵심 프로젝트 리드', 1590, 40, '#3b82f6', { period: '2027 H2', desc: '성과를 수치로 남기기' }),
+          TN('cr_switch', 'action', 'user', '목표 직무 이직 준비', 1590, 250, '#3b82f6', {
+            period: '2027 H2', checklist: TC('이력서 · 포트폴리오 업데이트', '현직자 커피챗 5회', '지원 · 면접')
+          }),
+          TN('cr_grad', 'document', 'book', '대학원 지원', 1590, 520, '#f59e0b', {
+            period: '2027 H2', checklist: TC('학업계획서', '추천서 2부', '입학 시험 준비')
+          }),
+          TN('cr_mid', 'milestone', 'flag', '중기 목표 (2~3년)', 2010, 280, '#f59e0b', { period: '~2029', desc: '목표 직무에서 성과 증명' }),
+          TN('cr_long', 'end', 'target', '장기 목표', 2400, 305, '#ec4899', { period: '2031', desc: '5년 후 되고 싶은 모습' })
+        ],
+        edges: [
+          TE('cre1', 'cr_now', 'right', 'cr_diag', 'left'),
+          TE('cre2', 'cr_diag', 'right', 'cr_short', 'left'),
+          TE('cre3', 'cr_short', 'right', 'cr_path', 'left'),
+          TE('cre4', 'cr_path', 'branch:deep', 'cr_deep', 'left', '현 직무 심화'),
+          TE('cre5', 'cr_path', 'branch:switch', 'cr_switch', 'left', '직무 전환'),
+          TE('cre6', 'cr_path', 'branch:grad', 'cr_grad', 'left', '대학원 진학'),
+          TE('cre7', 'cr_deep', 'right', 'cr_mid', 'left'),
+          TE('cre8', 'cr_switch', 'right', 'cr_mid', 'left'),
+          TE('cre9', 'cr_grad', 'right', 'cr_mid', 'left'),
+          TE('cre10', 'cr_mid', 'right', 'cr_long', 'left')
+        ],
+        notes: [
+          { id: 'cr_note', x: 40, y: 20, width: 270, height: 180, color: 'yellow', text: '💡 사용법\n노드 선택 → Tab: 다음 단계 / Enter: 같은 단계\n더블클릭: 이름 수정\n오른쪽 패널: 기간 · 진행 상태 · 체크리스트' }
+        ]
+      };
+    }
+
+    if (key === 'study') {
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 60, zoom: 0.8 },
+        nodes: [
+          TN('st_topic', 'start', 'book', '공부할 주제', 40, 290, '#10b981', { desc: '예: 옵션 가격결정 모형' }),
+          TN('st_src', 'document', 'book', '자료 준비', 360, 220, '#f59e0b', { checklist: TC('교재 해당 챕터', '강의 · 요약본', '예제 · 기출 문제') }),
+          TN('st_concept', 'action', 'check', '핵심 개념', 760, 220, '#10b981', { checklist: TC('개념 1 정의', '개념 2 정의', '개념 사이의 관계') }),
+          TN('st_why', 'action', 'action', '원리 이해', 1160, 268, '#3b82f6', { desc: '왜 그렇게 되는지 한 문장으로 설명해보기' }),
+          TN('st_ex', 'action', 'check', '예제 풀이', 1560, 240, '#3b82f6', { checklist: TC('기본 예제 3개', '기출 5개') }),
+          TN('st_check', 'condition', 'condition', '스스로 설명 가능?', 1960, 256, '#8b5cf6', {
+            branches: [{ id: 'yes', label: '설명 가능' }, { id: 'half', label: '헷갈림' }, { id: 'no', label: '모르겠음' }]
+          }),
+          TN('st_apply', 'milestone', 'flag', '응용 · 연결', 2350, 60, '#f59e0b', { desc: '다른 개념과 연결해 한 장으로 정리' }),
+          TN('st_wrong', 'action', 'edit', '오답 정리 후 다시 풀기', 2350, 290, '#f97316'),
+          TN('st_back', 'action', 'undo', '개념 다시 보기', 2350, 480, '#ef4444'),
+          TN('st_review', 'end', 'target', '복습 일정 잡기', 2760, 85, '#ec4899', { desc: '1일 · 7일 · 30일 후' })
+        ],
+        edges: [
+          TE('ste1', 'st_topic', 'right', 'st_src', 'left'),
+          TE('ste2', 'st_src', 'right', 'st_concept', 'left'),
+          TE('ste3', 'st_concept', 'right', 'st_why', 'left'),
+          TE('ste4', 'st_why', 'right', 'st_ex', 'left'),
+          TE('ste5', 'st_ex', 'right', 'st_check', 'left'),
+          TE('ste6', 'st_check', 'branch:yes', 'st_apply', 'left', '설명 가능'),
+          TE('ste7', 'st_check', 'branch:half', 'st_wrong', 'left', '헷갈림'),
+          TE('ste8', 'st_check', 'branch:no', 'st_back', 'left', '모르겠음'),
+          TE('ste9', 'st_apply', 'right', 'st_review', 'left'),
+          TE('ste10', 'st_wrong', 'bottom', 'st_ex', 'bottom', '다시'),
+          TE('ste11', 'st_back', 'bottom', 'st_concept', 'bottom', '다시')
+        ],
+        notes: []
+      };
+    }
+
+    if (key === 'exam') {
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 60, zoom: 0.8 },
+        nodes: [
+          TN('ex_goal', 'start', 'target', '시험 목표 설정', 40, 290, '#10b981', { period: 'D-120', desc: '시험명 · 목표 점수' }),
+          TN('ex_scope', 'action', 'check', '범위 파악', 380, 220, '#10b981', { period: 'D-120', checklist: TC('시험 범위 · 과목별 비중', '교재 선정', '주간 계획표') }),
+          TN('ex_read', 'action', 'book', '1회독', 780, 220, '#3b82f6', { period: 'D-110 ~ D-60', checklist: TC('과목 1', '과목 2', '과목 3') }),
+          TN('ex_drill', 'action', 'check', '기출 · 문제풀이', 1180, 230, '#3b82f6', { period: 'D-60 ~ D-30', checklist: TC('기출 3개년', '오답노트') }),
+          TN('ex_mock', 'milestone', 'flag', '모의고사', 1580, 270, '#f59e0b', { period: 'D-30' }),
+          TN('ex_check', 'condition', 'condition', '목표 점수 도달?', 1950, 255, '#8b5cf6', {
+            branches: [{ id: 'ok', label: '도달' }, { id: 'near', label: '조금 부족' }, { id: 'far', label: '많이 부족' }]
+          }),
+          TN('ex_keep', 'action', 'action', '실전 감각 유지', 2340, 60, '#3b82f6', { period: 'D-14', desc: '시간 재고 풀기' }),
+          TN('ex_weak', 'action', 'edit', '취약 파트 집중', 2340, 290, '#f97316'),
+          TN('ex_reprio', 'action', 'layout', '우선순위 재조정', 2340, 500, '#ef4444', { desc: '배점 높은 파트부터' }),
+          TN('ex_day', 'end', 'target', '시험', 2740, 85, '#ec4899', { period: 'D-day' })
+        ],
+        edges: [
+          TE('exe1', 'ex_goal', 'right', 'ex_scope', 'left'),
+          TE('exe2', 'ex_scope', 'right', 'ex_read', 'left'),
+          TE('exe3', 'ex_read', 'right', 'ex_drill', 'left'),
+          TE('exe4', 'ex_drill', 'right', 'ex_mock', 'left'),
+          TE('exe5', 'ex_mock', 'right', 'ex_check', 'left'),
+          TE('exe6', 'ex_check', 'branch:ok', 'ex_keep', 'left', '도달'),
+          TE('exe7', 'ex_check', 'branch:near', 'ex_weak', 'left', '조금 부족'),
+          TE('exe8', 'ex_check', 'branch:far', 'ex_reprio', 'left', '많이 부족'),
+          TE('exe9', 'ex_keep', 'right', 'ex_day', 'left'),
+          TE('exe10', 'ex_weak', 'top', 'ex_keep', 'bottom'),
+          TE('exe11', 'ex_reprio', 'top', 'ex_weak', 'bottom')
+        ],
+        notes: []
+      };
+    }
+
+    if (key === 'realestate') {
+      const N = (id, type, icon, title, x, y, color, extra = {}) =>
+        ({ id, type, category: type, icon, title, desc: '', x, y, color, status: 'idle', memo: '', ...extra });
+      const C = (...items) => items.map((text, i) => ({ id: `ck${i}`, text, done: false }));
+      const E = (id, from, fromPort, to, toPort, label = '') => ({ id, from, fromPort, to, toPort, label, lineType: 'orthogonal' });
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 80, zoom: 0.8 },
+        nodes: [
+          N('re_start', 'start', 'start', '매물 선정', 40, 331, '#10b981'),
+          N('re_check', 'action', 'check', '매물 확인', 300, 190, '#10b981', {
+            checklist: C('하자(누수·균열·곰팡이) 확인', '등기부등본 — 근저당·질권·가압류 확인', '건축물대장 — 위반건축물 여부', '전입세대·체납 세금 확인', '실거래가 시세 비교')
+          }),
+          N('re_decide', 'condition', 'condition', '확인 결과는?', 690, 296, '#8b5cf6', {
+            branches: [{ id: 'ok', label: '이상 없음' }, { id: 'nego', label: '가격 협상 필요' }, { id: 'drop', label: '계약 포기' }]
+          }),
+          N('re_contract', 'document', 'document', '계약서 작성', 1060, 60, '#f59e0b', {
+            checklist: C('매도인 본인·대리권 확인', '계약금·중도금·잔금 일정', '특약사항 (하자 보수·권리 말소)', '중개수수료 확인')
+          }),
+          N('re_nego', 'action', 'message', '가격 재협상', 1060, 380, '#38bdf8', {
+            checklist: C('하자 보수비 견적 받기', '조정 가격 제시')
+          }),
+          N('re_giveup', 'end', 'end', '매수 포기', 1060, 560, '#ef4444'),
+          N('re_close', 'action', 'check', '잔금 및 등기', 1450, 80, '#10b981', {
+            checklist: C('잔금 전 등기부등본 재확인', '잔금 지급 · 열쇠 인수', '소유권 이전 등기 신청', '취득세 납부')
+          }),
+          N('re_end', 'end', 'end', '소유권 이전 완료', 1840, 180, '#ec4899')
+        ],
+        edges: [
+          E('re1', 're_start', 'right', 're_check', 'left'),
+          E('re2', 're_check', 'right', 're_decide', 'left'),
+          E('re3', 're_decide', 'branch:ok', 're_contract', 'left', '이상 없음'),
+          E('re4', 're_decide', 'branch:nego', 're_nego', 'left', '가격 협상 필요'),
+          E('re5', 're_decide', 'branch:drop', 're_giveup', 'left', '계약 포기'),
+          E('re6', 're_nego', 'top', 're_contract', 'bottom', '합의'),
+          E('re7', 're_contract', 'right', 're_close', 'left'),
+          E('re8', 're_close', 'right', 're_end', 'left')
+        ],
+        notes: []
+      };
+    }
+
     if (key === 'timeline_basic') {
       return {
         mode: 'timeline',

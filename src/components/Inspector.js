@@ -1,5 +1,7 @@
 // Inspector.js: Right drawer properties editor and node-level documentation memo tab
 import { Icons, getIcon } from '../utils/icons.js';
+import { getNodeShape, PROGRESS_STATES } from './NodeRenderer.js';
+import { legacyBranchesFor, newItemId } from '../core/Branches.js';
 
 export class Inspector {
   constructor(state, contentArea, headerTitleEl, headerIconEl, aiEngine) {
@@ -51,7 +53,7 @@ export class Inspector {
 
   renderNodeProperties(node) {
     this.contentArea.innerHTML = `
-      <div class="inspector-section" style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <div class="inspector-section insp-ai-box" style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <label class="inspector-label" style="color: #c084fc; margin-bottom: 8px;">✨ AI Copilot 추천 액션</label>
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <button class="btn-secondary" id="insp-ai-next" style="justify-content: flex-start; background: var(--bg-surface); border-color: rgba(168,85,247,0.2);">
@@ -73,6 +75,10 @@ export class Inspector {
         <textarea class="inspector-textarea" id="inp-node-desc" placeholder="이 노드가 수행하는 작업에 대한 상세 설명">${this.escapeHtml(node.desc || '')}</textarea>
       </div>
 
+      ${this.roadmapSectionHtml(node)}
+
+      ${this.structureSectionHtml(node)}
+
       <div class="inspector-section">
         <label class="inspector-label">포인트 색상 (Accent)</label>
         <div class="inspector-color-grid">
@@ -82,7 +88,7 @@ export class Inspector {
         </div>
       </div>
 
-      <div class="inspector-section">
+      <div class="inspector-section insp-type">
         <label class="inspector-label">노드 타입</label>
         <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--primary-light);">
           ${node.type} (${node.category})
@@ -113,6 +119,9 @@ export class Inspector {
       }
     });
 
+    this.bindStructureSection(node);
+    this.bindRoadmapSection(node);
+
     // Event listeners
     const titleInp = this.contentArea.querySelector('#inp-node-title');
     titleInp.addEventListener('change', () => {
@@ -137,6 +146,146 @@ export class Inspector {
     this.contentArea.querySelector('#btn-delete-node').addEventListener('click', () => {
       this.state.removeNode(node.id);
     });
+  }
+
+  // Roadmap status + period (not for decisions)
+  roadmapSectionHtml(node) {
+    if (getNodeShape(node) === 'decision') return '';
+    const cur = node.progress || '';
+    return `
+      <div class="inspector-section">
+        <label class="inspector-label">진행 상태</label>
+        <div class="insp-seg" id="progress-seg">
+          ${[{ key: '', label: '없음' }, ...PROGRESS_STATES].map(p => `
+            <button class="insp-seg-btn ${cur === p.key ? 'on' : ''} ${p.key ? 'p-' + p.key : ''}" data-progress="${p.key}">${p.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="inspector-section">
+        <label class="inspector-label">기간 / 시점</label>
+        <input type="text" class="inspector-input" id="inp-node-period" maxlength="30" placeholder="예: 2026 Q4, ~2027.06, D-30" value="${this.escapeHtml(node.period || '')}" />
+      </div>`;
+  }
+
+  bindRoadmapSection(node) {
+    this.contentArea.querySelectorAll('[data-progress]').forEach(btn => btn.addEventListener('click', () => {
+      this.state.updateNode(node.id, { progress: btn.dataset.progress || undefined });
+    }));
+    const period = this.contentArea.querySelector('#inp-node-period');
+    period?.addEventListener('change', () => {
+      this.state.updateNode(node.id, { period: period.value.trim() || undefined });
+    });
+    period?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) period.blur(); });
+  }
+
+  // Checklist editor for regular nodes, branch editor for decision nodes
+  structureSectionHtml(node) {
+    const shape = getNodeShape(node);
+    if (shape === 'terminal') return '';
+    if (shape === 'decision') {
+      const branches = Array.isArray(node.branches) ? node.branches : legacyBranchesFor(node, this.state.edges);
+      return `
+        <div class="inspector-section">
+          <label class="inspector-label">분기 <span class="insp-count">${branches.length}개</span></label>
+          <div class="insp-list" id="branch-list">
+            ${branches.map((b, i) => `
+              <div class="insp-row">
+                <span class="insp-branch-dot"></span>
+                <input class="inspector-input insp-row-input" data-branch-idx="${i}" value="${this.escapeHtml(b.label)}" maxlength="40" />
+                <button class="insp-row-btn" data-branch-next="${i}" title="이 분기의 다음 단계 추가">＋단계</button>
+                <button class="insp-row-btn danger" data-branch-del="${i}" title="분기 삭제" ${branches.length <= 1 ? 'disabled' : ''}>×</button>
+              </div>`).join('')}
+          </div>
+          <button class="btn-secondary insp-add-btn" id="btn-add-branch">${Icons.plus} 분기 추가</button>
+          <div class="insp-hint">분기마다 다이아몬드 오른쪽에 출력 포트가 생깁니다. 포트에서 드래그해 연결하거나 ＋단계로 바로 추가하세요.</div>
+        </div>`;
+    }
+    const items = Array.isArray(node.checklist) ? node.checklist : [];
+    const done = items.filter(c => c.done).length;
+    return `
+      <div class="inspector-section">
+        <label class="inspector-label">체크리스트 ${items.length ? `<span class="insp-count">${done}/${items.length}</span>` : ''}</label>
+        <div class="insp-list" id="check-list">
+          ${items.map((c, i) => `
+            <div class="insp-row ${c.done ? 'done' : ''}">
+              <input type="checkbox" class="insp-check" data-check-toggle="${i}" ${c.done ? 'checked' : ''} />
+              <input class="inspector-input insp-row-input" data-check-text="${i}" value="${this.escapeHtml(c.text)}" maxlength="120" />
+              <button class="insp-row-btn danger" data-check-del="${i}" title="삭제">×</button>
+            </div>`).join('')}
+        </div>
+        <input class="inspector-input" id="inp-check-new" placeholder="확인 항목 입력 후 Enter (예: 하자 확인)" maxlength="120" />
+      </div>`;
+  }
+
+  bindStructureSection(node) {
+    const root = this.contentArea;
+
+    // ----- checklist -----
+    const checks = () => (Array.isArray(node.checklist) ? node.checklist : []).map(c => ({ ...c }));
+    root.querySelector('#inp-check-new')?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      const text = e.target.value.trim();
+      if (!text) return;
+      this.refocus = '#inp-check-new';
+      this.state.updateNode(node.id, { checklist: [...checks(), { id: newItemId('ck'), text, done: false }] });
+    });
+    root.querySelectorAll('[data-check-toggle]').forEach(cb => cb.addEventListener('change', () => {
+      const list = checks();
+      list[cb.dataset.checkToggle].done = cb.checked;
+      this.state.updateNode(node.id, { checklist: list });
+    }));
+    root.querySelectorAll('[data-check-text]').forEach(inp => inp.addEventListener('change', () => {
+      const list = checks();
+      const text = inp.value.trim();
+      if (text) list[inp.dataset.checkText].text = text; else list.splice(Number(inp.dataset.checkText), 1);
+      this.state.updateNode(node.id, { checklist: list });
+    }));
+    root.querySelectorAll('[data-check-del]').forEach(btn => btn.addEventListener('click', () => {
+      const list = checks();
+      list.splice(Number(btn.dataset.checkDel), 1);
+      this.state.updateNode(node.id, { checklist: list });
+    }));
+
+    // ----- branches -----
+    const branches = () => (Array.isArray(node.branches) ? node.branches : legacyBranchesFor(node, this.state.edges)).map(b => ({ ...b }));
+    root.querySelector('#btn-add-branch')?.addEventListener('click', () => {
+      const list = branches();
+      list.push({ id: newItemId('br'), label: `분기 ${list.length + 1}` });
+      this.refocus = `[data-branch-idx="${list.length - 1}"]`;
+      this.state.updateBranches(node.id, list);
+    });
+    root.querySelectorAll('[data-branch-idx]').forEach(inp => inp.addEventListener('change', () => {
+      const text = inp.value.trim();
+      if (!text) { inp.value = branches()[inp.dataset.branchIdx].label; return; }
+      const list = branches();
+      list[inp.dataset.branchIdx].label = text;
+      this.state.updateBranches(node.id, list);
+    }));
+    root.querySelectorAll('[data-branch-del]').forEach(btn => btn.addEventListener('click', () => {
+      const list = branches();
+      const [removed] = list.splice(Number(btn.dataset.branchDel), 1);
+      const linked = this.state.edges.filter(e => e.from === node.id && e.fromPort === `branch:${removed.id}`).length;
+      if (linked && !confirm(`'${removed.label}' 분기와 연결선 ${linked}개를 삭제할까요?`)) return;
+      this.state.updateBranches(node.id, list);
+    }));
+    root.querySelectorAll('[data-branch-next]').forEach(btn => btn.addEventListener('click', () => {
+      let list = branches();
+      if (!Array.isArray(node.branches)) this.state.updateBranches(node.id, list); // migrate legacy Yes/No first
+      list = node.branches;
+      const i = Number(btn.dataset.branchNext);
+      const b = list[i];
+      const newNode = this.state.addNode({
+        title: `${b.label} 처리`, type: 'action', category: 'action', color: '#3b82f6',
+        x: node.x + 320, y: node.y + (i - (list.length - 1) / 2) * 150
+      });
+      this.state.addEdge(node.id, `branch:${b.id}`, newNode.id, 'left', b.label, 'orthogonal');
+    }));
+
+    if (this.refocus) {
+      const el = root.querySelector(this.refocus);
+      this.refocus = null;
+      if (el) { el.focus(); if (el.select) el.select(); }
+    }
   }
 
   // Node-level documentation memo tab
@@ -189,14 +338,14 @@ export class Inspector {
 
     const labelInp = this.contentArea.querySelector('#inp-edge-label');
     labelInp.addEventListener('change', () => {
-      this.state.updateEdge(edge.id, { label: labelInp.value.trim() });
+      this.state.setEdgeLabel(edge.id, labelInp.value.trim());
     });
 
     this.contentArea.querySelector('#btn-line-bezier').addEventListener('click', () => {
       this.state.updateEdge(edge.id, { lineType: 'bezier' });
     });
-    this.contentArea.querySelector('#btn-line-step').addEventListener('click', () => {
-      this.state.updateEdge(edge.id, { lineType: 'step' });
+    this.contentArea.querySelector('#btn-line-orthogonal').addEventListener('click', () => {
+      this.state.updateEdge(edge.id, { lineType: 'orthogonal' });
     });
     this.contentArea.querySelector('#btn-line-straight').addEventListener('click', () => {
       this.state.updateEdge(edge.id, { lineType: 'straight' });

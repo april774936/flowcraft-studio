@@ -1,4 +1,7 @@
 // Connections.js: Professional Flowchart Orthogonal Routing, Bezier Curves, and Port Geometry
+import { isBranchPort, branchIdOf, branchPortPoint } from './Branches.js';
+import { isSecondClick } from '../utils/doubleClick.js';
+
 export class Connections {
   constructor(state, svgElement, edgesGroup, tempPathElement) {
     this.state = state;
@@ -33,6 +36,15 @@ export class Connections {
     const nx = node.x;
     const ny = node.y;
 
+    // N-way decision: one port per branch on the right half of the diamond
+    if (isBranchPort(port) && Array.isArray(node.branches)) {
+      const idx = node.branches.findIndex(b => b.id === branchIdOf(port));
+      if (idx >= 0) {
+        const p = branchPortPoint(idx, node.branches.length, width, height);
+        return { x: nx + p.x, y: ny + p.y };
+      }
+    }
+
     switch (port) {
       case 'top':
         return { x: nx + width / 2, y: ny };
@@ -47,7 +59,8 @@ export class Connections {
   }
 
   // Smart Orthogonal Step Path with 8px rounded corners (Industry standard for flowcharts)
-  createOrthogonalPathD(p1, p2, fromPort = 'right', toPort = 'left') {
+  // midRatio: where the vertical segment of a right→left edge sits between the two nodes
+  createOrthogonalPathD(p1, p2, fromPort = 'right', toPort = 'left', midRatio = 0.5) {
     const r = 8; // Corner radius
 
     // 1. Right to Left (Standard horizontal flow)
@@ -55,7 +68,7 @@ export class Connections {
       const isForward = p2.x > p1.x + 20;
 
       if (isForward) {
-        const midX = (p1.x + p2.x) / 2;
+        const midX = p1.x + (p2.x - p1.x) * midRatio;
         const dy = p2.y - p1.y;
 
         if (Math.abs(dy) < 6) {
@@ -115,6 +128,13 @@ export class Connections {
       }
     }
 
+    // 3. Same-side loops (e.g. "다시" back to an earlier step): run around below / above
+    if ((fromPort === 'bottom' && toPort === 'bottom') || (fromPort === 'top' && toPort === 'top')) {
+      const down = fromPort === 'bottom';
+      const y = down ? Math.max(p1.y, p2.y) + 44 : Math.min(p1.y, p2.y) - 44;
+      return `M ${p1.x} ${p1.y} L ${p1.x} ${y} L ${p2.x} ${y} L ${p2.x} ${p2.y}`;
+    }
+
     // Fallback: Clean step line
     const midX = (p1.x + p2.x) / 2;
     return `M ${p1.x} ${p1.y} L ${midX} ${p1.y} L ${midX} ${p2.y} L ${p2.x} ${p2.y}`;
@@ -143,7 +163,8 @@ export class Connections {
     return `M ${p1.x} ${p1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p2.x} ${p2.y}`;
   }
 
-  createPathD(p1, p2, lineType = 'orthogonal', fromPort = 'right', toPort = 'left') {
+  createPathD(p1, p2, lineType = 'orthogonal', fromPort = 'right', toPort = 'left', midRatio = 0.5) {
+    if (isBranchPort(fromPort)) fromPort = 'right'; // branch ports leave to the right
     if (lineType === 'straight') {
       return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     }
@@ -151,7 +172,19 @@ export class Connections {
       return this.createBezierPathD(p1, p2, fromPort, toPort);
     }
     // Default: Professional Orthogonal
-    return this.createOrthogonalPathD(p1, p2, fromPort, toPort);
+    return this.createOrthogonalPathD(p1, p2, fromPort, toPort, midRatio);
+  }
+
+  // Branch edges of one decision node turn at staggered x positions so their vertical
+  // segments don't overlap: outer branches turn early, middle ones late.
+  branchMidRatio(node, port) {
+    if (!isBranchPort(port) || !Array.isArray(node.branches) || node.branches.length < 2) return 0.5;
+    const n = node.branches.length;
+    const idx = node.branches.findIndex(b => b.id === branchIdOf(port));
+    if (idx < 0) return 0.5;
+    const center = (n - 1) / 2;
+    const outer = Math.abs(idx - center) / center; // 1 = outermost, 0 = middle
+    return 0.72 - 0.44 * outer;
   }
 
   // Node bounding box in world coordinates (rendered size when available)
@@ -196,7 +229,7 @@ export class Connections {
       const p2 = this.getPortCoordinates(toNode, edge.toPort || 'left');
       
       const lineType = edge.lineType || 'orthogonal';
-      const d = this.createPathD(p1, p2, lineType, edge.fromPort, edge.toPort);
+      const d = this.createPathD(p1, p2, lineType, edge.fromPort, edge.toPort, this.branchMidRatio(fromNode, edge.fromPort));
 
       const isSelected = this.state.selectedEdgeId === edge.id;
 
@@ -270,6 +303,10 @@ export class Connections {
       // Edge Selection
       g.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isSecondClick('edge:' + edge.id)) {
+          this.state.emit('quick:edge-label', edge.id);
+          return;
+        }
         this.state.selectEdge(edge.id);
       });
     });
@@ -300,7 +337,10 @@ export class Connections {
     if (targetNodeId && targetNodeId !== this.dragStart.nodeId) {
       const fromNode = this.state.nodes.find(n => n.id === this.dragStart.nodeId);
       let label = '';
-      if (fromNode && fromNode.type === 'condition') {
+      if (fromNode && isBranchPort(this.dragStart.port)) {
+        const b = (fromNode.branches || []).find(x => x.id === branchIdOf(this.dragStart.port));
+        label = b ? b.label : '';
+      } else if (fromNode && fromNode.type === 'condition') {
         label = this.dragStart.port === 'right' ? 'Yes' : (this.dragStart.port === 'bottom' ? 'No' : '');
       }
       this.state.addEdge(this.dragStart.nodeId, this.dragStart.port, targetNodeId, targetPort, label, 'orthogonal');
