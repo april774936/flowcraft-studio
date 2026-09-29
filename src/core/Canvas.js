@@ -9,6 +9,15 @@ export class Canvas {
     this.guideY = guideY;
     this.marquee = marquee;
 
+    // Last pointer position over the canvas (paste target)
+    this.lastPointerWorld = null;
+    this.pointerInside = false;
+    container.addEventListener('mousemove', (e) => {
+      this.pointerInside = true;
+      this.lastPointerWorld = this.screenToWorld(e.clientX, e.clientY);
+    });
+    container.addEventListener('mouseleave', () => { this.pointerInside = false; });
+
     // Pan state
     this.isPanning = false;
     this.isPanMode = false;
@@ -50,6 +59,7 @@ export class Canvas {
   updateTransform() {
     const { x, y, zoom } = this.state.viewport;
     this.world.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
+    this.world.style.setProperty('--zoom', zoom); // lets edge grab areas stay a fixed screen size
 
     // Sync grid background
     const gridSize = 24 * zoom;

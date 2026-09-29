@@ -70,6 +70,17 @@
 }
 .workflow-node.selected .node-shape path { stroke-width: 2px; }
 
+/* Main route (user-marked): gold outline, stays readable when also selected */
+.workflow-node.on-main:not(.selected) { --node-stroke: #fbbf24; }
+.workflow-node.on-main.shape-process,
+.workflow-node.on-main.shape-terminal {
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.55), 0 0 18px rgba(251, 191, 36, 0.18), var(--shadow-lg);
+}
+.workflow-node.on-main .node-shape {
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.3));
+}
+.workflow-node.on-main .node-shape path { stroke-width: 2px; }
+
 .workflow-node.dragging {
   transform: scale(1.02);
   z-index: 40;
@@ -433,3 +444,9 @@
   box-shadow: 0 0 0 4px var(--primary-glow);
 }
 .node-title[contenteditable="true"]:focus { cursor: text; }
+
+/* Node the connection being dragged would attach to */
+.workflow-node.drop-target { --node-stroke: #a78bfa; }
+.workflow-node.drop-target.shape-process,
+.workflow-node.drop-target.shape-terminal { box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.55), var(--shadow-lg); }
+.workflow-node.drop-target .node-shape { filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.6)); }

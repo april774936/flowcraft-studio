@@ -1,7 +1,8 @@
 // NodeRenderer.js: Flowchart ISO shape rendering, magnetic ports, and Whimsical-style [+] quick connectors
 import { Icons } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
-import { branchPort, branchPortPoint, newItemId } from '../core/Branches.js';
+import { branchPort, branchPortPoint } from '../core/Branches.js';
+import { computeMainPath } from '../core/MainPath.js';
 import { isSecondClick } from '../utils/doubleClick.js';
 
 const MAX_VISIBLE_CHECKS = 8;
@@ -67,10 +68,12 @@ export class NodeRenderer {
   render() {
     this.layer.innerHTML = '';
 
+    const mainNodes = computeMainPath(this.state.nodes, this.state.edges).nodes;
+
     this.state.nodes.forEach(node => {
       const isSelected = this.state.selectedNodeIds.has(node.id);
       const el = document.createElement('div');
-      el.className = `workflow-node type-${node.type} status-${node.status || 'idle'} ${isSelected ? 'selected' : ''}`;
+      el.className = `workflow-node type-${node.type} status-${node.status || 'idle'} ${isSelected ? 'selected' : ''} ${mainNodes.has(node.id) ? 'on-main' : ''}`;
       el.dataset.nodeId = node.id;
       el.style.left = `${node.x}px`;
       el.style.top = `${node.y}px`;
@@ -127,7 +130,7 @@ export class NodeRenderer {
         <div class="node-body">
           ${metaHtml}
           <div class="node-header">
-            <div class="node-title" contenteditable="true" spellcheck="false" title="클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
+            <div class="node-title" contenteditable="true" spellcheck="false" title="더블클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
             ${progressHtml}
           </div>
           ${node.desc && shape !== 'terminal' && shape !== 'decision' ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
@@ -144,7 +147,7 @@ export class NodeRenderer {
       el.addEventListener('mouseup', (e) => {
         if (!this.connections.isConnecting || e.target.closest('.node-port')) return;
         e.stopPropagation();
-        this.connections.endConnecting(node.id, 'left');
+        this.connections.endConnecting(node.id, this.connections.pickTargetPort(this.connections.dragStart, node));
         this.canvas.container.classList.remove('connecting');
         soundFx.playSnap();
       });
@@ -169,7 +172,7 @@ export class NodeRenderer {
         e.stopPropagation();
 
         // Second click on the same node → edit its title (works across re-renders)
-        if (!e.target.closest('.node-check') && isSecondClick('node:' + node.id) && !e.target.isContentEditable) {
+        if (!e.target.closest('.node-check') && isSecondClick('node:' + node.id) && document.activeElement !== e.target) {
           e.preventDefault();
           requestAnimationFrame(() => this.editTitle(node.id));
           return;
@@ -180,9 +183,12 @@ export class NodeRenderer {
           this.state.selectNode(node.id, isMulti);
         }
 
-        if (e.target.classList.contains('node-title')) {
+        // The title only takes the mouse while it is being edited; otherwise it drags the node
+        if (e.target.classList.contains('node-title') && document.activeElement === e.target) {
           return;
         }
+        e.preventDefault(); // no caret / text selection on a plain press
+        if (document.activeElement && document.activeElement.classList.contains('node-title')) document.activeElement.blur();
 
         const worldPos = this.canvas.screenToWorld(e.clientX, e.clientY);
         const selectedNodes = this.state.nodes.filter(n => this.state.selectedNodeIds.has(n.id));
@@ -254,59 +260,22 @@ export class NodeRenderer {
         });
       });
 
-      // Whimsical / Miro Style Quick Add [+] Buttons
+      // Whimsical / Miro Style Quick Add [+] Buttons (same placement rules as Tab / quick input)
       el.querySelectorAll('.node-quick-add').forEach(quickBtn => {
+        // Dragging a "+" draws a connection: drop on a node to link it, on empty canvas for a new step there
+        quickBtn.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          e.stopPropagation();
+          e.preventDefault();
+          this.plusDrag = { nodeId: node.id, dir: quickBtn.dataset.direction, x: e.clientX, y: e.clientY, started: false };
+        });
         quickBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (this.suppressPlusClick) { this.suppressPlusClick = false; return; }
           const dir = quickBtn.dataset.direction;
-
-          // N-way decision: add a new branch and a step connected to it
-          if (dir === 'branch') {
-            const label = `분기 ${node.branches.length + 1}`;
-            const id = newItemId('br');
-            this.state.updateBranches(node.id, [...node.branches, { id, label }]);
-            const count = node.branches.length;
-            const newNode = this.state.addNode({
-              title: `${label} 처리`, desc: '', type: 'action', category: 'action',
-              x: node.x + 320, y: node.y + (count - 2) * 140,
-              color: '#3b82f6'
-            });
-            this.state.addEdge(node.id, branchPort(id), newNode.id, 'left', label, 'orthogonal');
-            this.state.selectNode(newNode.id, false);
-            soundFx.playPop();
-            return;
-          }
-
-          const isRight = dir === 'right';
-
-          const newX = isRight ? node.x + 280 : node.x;
-          const newY = isRight ? node.y : node.y + 160;
-
-          let nextType = 'action';
-          let nextTitle = '새로운 처리 단계';
-          let label = '';
-
-          if (node.type === 'condition') {
-            label = isRight ? 'Yes' : 'No';
-            nextTitle = isRight ? '승인/실행 단계' : '반려/재시도 단계';
-          } else if (node.type === 'start') {
-            nextTitle = '데이터 검증 및 처리';
-          }
-
-          const newNode = this.state.addNode({
-            title: nextTitle,
-            desc: '단계 세부 정보 입력',
-            type: nextType,
-            category: nextType,
-            x: newX,
-            y: newY,
-            color: isRight ? '#3b82f6' : '#f59e0b'
-          });
-
-          const fromPort = isRight ? 'right' : 'bottom';
-          const toPort = isRight ? 'left' : 'top';
-          this.state.addEdge(node.id, fromPort, newNode.id, toPort, label, 'orthogonal');
-          this.state.selectNode(newNode.id, false);
+          if (dir === 'bottom') this.state.emit('quick:below', node.id);
+          else if (dir === 'right' && node.type === 'condition') this.state.emit('quick:yes', node.id);
+          else this.state.emit('quick:child', node.id);
           soundFx.playPop();
         });
       });
@@ -381,14 +350,38 @@ export class NodeRenderer {
         this.connections.renderEdges();
       }
 
+      // "+" pressed and moved far enough: turn it into a connection drag
+      if (this.plusDrag && !this.plusDrag.started && Math.hypot(e.clientX - this.plusDrag.x, e.clientY - this.plusDrag.y) > 6) {
+        const pd = this.plusDrag;
+        const from = this.state.nodes.find(n => n.id === pd.nodeId);
+        if (from) {
+          pd.started = true;
+          const port = pd.dir === 'bottom' ? 'bottom' : pd.dir === 'branch' ? 'newbranch' : 'right';
+          const coords = this.connections.getPortCoordinates(from, port === 'newbranch' ? 'right' : port);
+          this.connections.startConnecting(from.id, port, coords.x, coords.y);
+          this.connections.dragStart.fromPlus = true;
+          this.canvas.container.classList.add('connecting');
+        } else {
+          this.plusDrag = null;
+        }
+      }
+
       // 2. Dragging connection wire
       if (this.connections.isConnecting) {
         const worldPos = this.canvas.screenToWorld(e.clientX, e.clientY);
-        this.connections.updateConnecting(worldPos.x, worldPos.y);
+        this.connections.updateConnecting(worldPos.x, worldPos.y, this.nodeNear(worldPos.x, worldPos.y, 36));
       }
     });
 
-    window.addEventListener('mouseup', () => {
+    window.addEventListener('mouseup', (e) => {
+      if (this.plusDrag) {
+        // A drag (not a click) happened: swallow the click that follows
+        if (this.plusDrag.started) {
+          this.suppressPlusClick = true;
+          setTimeout(() => { this.suppressPlusClick = false; }, 0);
+        }
+        this.plusDrag = null;
+      }
       if (this.dragNodesState) {
         this.dragNodesState.nodes.forEach(n => {
           const domEl = document.getElementById(`node-${n.id}`);
@@ -401,10 +394,36 @@ export class NodeRenderer {
       }
 
       if (this.connections.isConnecting) {
-        this.connections.endConnecting(null);
+        // Dropped just outside a node still counts as dropping on it
+        const w = this.canvas.screenToWorld(e.clientX, e.clientY);
+        const near = this.nodeNear(w.x, w.y, 36);
+        const start = this.connections.dragStart;
+        if (near && near.id !== start.nodeId) {
+          this.connections.endConnecting(near.id, this.connections.pickTargetPort(start, near));
+          soundFx.playSnap();
+        } else if (start.fromPlus && !near) {
+          const { nodeId, port } = start;
+          this.connections.endConnecting(null);
+          this.state.emit('quick:drop-new', { from: nodeId, port, x: w.x, y: w.y });
+        } else {
+          this.connections.endConnecting(null);
+        }
         this.canvas.container.classList.remove('connecting');
       }
     });
+  }
+
+  // Closest node whose box, grown by `tol` world px, contains the point
+  nodeNear(x, y, tol) {
+    let best = null, bestD = Infinity;
+    this.state.nodes.forEach(n => {
+      const s = this.state.measureNode(n) || { width: 260, height: 80 };
+      const dx = Math.max(n.x - x, 0, x - (n.x + s.width));
+      const dy = Math.max(n.y - y, 0, y - (n.y + s.height));
+      const d = Math.hypot(dx, dy);
+      if (d <= tol && d < bestD) { best = n; bestD = d; }
+    });
+    return best;
   }
 
   // Put the caret in a node's title with the text selected (typing replaces it)
