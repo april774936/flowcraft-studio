@@ -4,7 +4,7 @@
   --node-accent: #3b82f6;
   --node-stroke: color-mix(in srgb, var(--node-accent) 65%, var(--border-medium));
   position: absolute;
-  width: 240px;
+  width: 260px;
   min-height: 64px;
   display: flex;
   align-items: center;
@@ -52,7 +52,7 @@
 }
 .node-shape path.shape-detail { fill: none; }
 
-.workflow-node.shape-decision { width: 210px; min-height: 124px; }
+.workflow-node.shape-decision { width: 230px; min-height: 132px; }
 .workflow-node.shape-database { min-height: 84px; }
 .workflow-node.shape-document { min-height: 76px; }
 
@@ -108,7 +108,7 @@
 .node-title {
   flex: 1;
   min-width: 0;
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 650;
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -131,7 +131,7 @@
 }
 
 .node-desc {
-  font-size: 12.5px;
+  font-size: 14px;
   line-height: 1.5;
   color: var(--text-secondary);
   word-break: keep-all;
@@ -149,7 +149,7 @@
   margin-top: 2px;
   padding-top: 7px;
   border-top: 1px dashed var(--border-medium);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary);
 }
@@ -189,7 +189,7 @@
   text-align: center;
 }
 .shape-decision .node-header { flex-direction: column; gap: 4px; }
-.shape-decision .node-title { font-size: 13.5px; text-align: center; -webkit-line-clamp: 3; }
+.shape-decision .node-title { font-size: 15px; text-align: center; -webkit-line-clamp: 4; }
 
 .shape-manual .node-body,
 .shape-io .node-body { padding-left: 26px; padding-right: 26px; }
@@ -211,7 +211,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   background: var(--node-fill);
   border: 1px solid var(--border-medium);
@@ -272,7 +272,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -307,10 +307,10 @@
 .node-quick-add.add-bottom::after { left: -14px; right: -14px; bottom: 100%; height: 6px; }
 
 /* ---------- Checklist (sub-steps) ---------- */
-.workflow-node.has-checklist { width: 260px; }
+.workflow-node.has-checklist { width: 280px; }
 .node-progress {
   flex-shrink: 0;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 999px;
@@ -334,7 +334,7 @@
   padding: 3px 4px;
   margin: 0 -4px;
   border-radius: 5px;
-  font-size: 12.5px;
+  font-size: 14px;
   line-height: 1.4;
   color: var(--text-primary);
   cursor: pointer;
@@ -363,7 +363,7 @@
 }
 .node-check.done .node-check-text { color: var(--text-muted); text-decoration: line-through; }
 .node-check-text { word-break: keep-all; overflow-wrap: anywhere; }
-.node-check-more { font-size: 11.5px; color: var(--text-muted); padding: 2px 0 0 22px; }
+.node-check-more { font-size: 12.5px; color: var(--text-muted); padding: 2px 0 0 22px; }
 
 /* ---------- N-way decision: one output port per branch ---------- */
 .node-port.node-port-branch { transform: none; border-color: #a78bfa; }
@@ -374,7 +374,7 @@
   top: 50%;
   transform: translateY(-50%);
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -388,7 +388,7 @@
 .node-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .shape-terminal .node-meta { justify-content: center; }
 .node-period {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--node-accent);
@@ -397,7 +397,7 @@
   border-radius: 4px;
   font-variant-numeric: tabular-nums;
 }
-.node-progress-pill { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+.node-progress-pill { font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
 .node-progress-pill.p-planned { color: var(--text-secondary); background: var(--bg-surface-elevated); }
 .node-progress-pill.p-active { color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
 .node-progress-pill.p-done { color: #34d399; background: rgba(52, 211, 153, 0.15); }

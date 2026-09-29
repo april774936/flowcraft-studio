@@ -9,7 +9,7 @@
 
 .project-modal-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 17px;
+  font-size: 18.5px;
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -49,7 +49,7 @@
   border: none;
   padding: 8px 0;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
 }
 
@@ -118,7 +118,7 @@
 }
 
 .project-card-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -127,7 +127,7 @@
 }
 
 .badge-active-project {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -136,7 +136,7 @@
 }
 
 .project-card-meta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@
 }
 
 .form-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -180,7 +180,7 @@
   border-radius: var(--border-radius-sm);
   padding: 8px 12px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
   transition: border var(--transition-fast);
 }
@@ -217,12 +217,12 @@
 }
 
 .template-radio-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .template-radio-desc {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
 }

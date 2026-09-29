@@ -20,7 +20,7 @@ body, html {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -37,7 +37,7 @@ body, html {
 /* Button & interactive components */
 button {
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   border: none;
   background: transparent;
@@ -216,7 +216,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
   pointer-events: auto;
   animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }

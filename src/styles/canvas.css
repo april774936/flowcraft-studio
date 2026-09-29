@@ -135,7 +135,7 @@
 
 .edge-label-text {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   fill: var(--text-primary);
   text-anchor: middle;
@@ -266,7 +266,7 @@
   gap: 6px;
   padding: 7px 12px;
   border-radius: var(--border-radius-full);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
@@ -313,7 +313,7 @@
   border: 1px solid var(--border-medium);
   padding: 4px 12px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
