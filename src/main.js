@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const edgesGroup = document.getElementById('edges-group');
   const tempPath = document.getElementById('temp-connection');
   const connections = new Connections(state, svg, edgesGroup, tempPath);
+  connections.canvas = canvas;
 
   // 4. Nodes & Sticky Notes layers
   const nodesLayer = document.getElementById('nodes-layer');

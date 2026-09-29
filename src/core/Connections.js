@@ -12,6 +12,43 @@ export class Connections {
 
     this.isConnecting = false;
     this.dragStart = null;
+    this.canvas = null; // set by main.js (screen → world for line dragging)
+    this.bendDrag = null;
+
+    window.addEventListener('mousemove', (e) => this.onBendMove(e));
+    window.addEventListener('mouseup', () => this.onBendEnd());
+  }
+
+  onBendMove(e) {
+    const bd = this.bendDrag;
+    if (!bd || !this.canvas) return;
+    if (!bd.started) {
+      if (Math.hypot(e.clientX - bd.x, e.clientY - bd.y) < 5) return;
+      bd.started = true;
+      this.state.beginGesture();
+      if (this.state.selectedEdgeId !== bd.edgeId) this.state.selectEdge(bd.edgeId);
+      document.body.classList.add('bending-edge');
+    }
+    const edge = this.state.edges.find(x => x.id === bd.edgeId);
+    const from = edge && this.state.nodes.find(n => n.id === edge.from);
+    const to = edge && this.state.nodes.find(n => n.id === edge.to);
+    if (!from || !to) return;
+    const p1 = this.getPortCoordinates(from, edge.fromPort || 'right');
+    const p2 = this.getPortCoordinates(to, edge.toPort || 'left');
+    const w = this.canvas.screenToWorld(e.clientX, e.clientY);
+    edge.bend = { dx: Math.round(w.x - (p1.x + p2.x) / 2), dy: Math.round(w.y - (p1.y + p2.y) / 2) };
+    this.renderEdges();
+  }
+
+  onBendEnd() {
+    const bd = this.bendDrag;
+    this.bendDrag = null;
+    if (!bd || !bd.started) return;
+    document.body.classList.remove('bending-edge');
+    this.suppressEdgeClick = true;
+    setTimeout(() => { this.suppressEdgeClick = false; }, 0);
+    this.state.endGesture();
+    this.state.emit('canvas:change');
   }
 
   // Get accurate port coordinates based on node shape
@@ -44,6 +81,12 @@ export class Connections {
         const p = branchPortPoint(idx, node.branches.length, width, height);
         return { x: nx + p.x, y: ny + p.y };
       }
+    }
+
+    // Side ports on slanted outlines (inverted triangle / trapezoid) sit on the outline
+    const inset = node.shape === 'filing' ? 0.25 : node.shape === 'invtrap' ? 0.1 : 0;
+    if (inset && (port === 'left' || port === 'right')) {
+      return { x: port === 'left' ? nx + width * inset : nx + width * (1 - inset), y: ny + height / 2 };
     }
 
     switch (port) {
@@ -192,8 +235,9 @@ export class Connections {
     return `M ${p1.x} ${p1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p2.x} ${p2.y}`;
   }
 
-  createPathD(p1, p2, lineType = 'orthogonal', fromPort = 'right', toPort = 'left', midRatio = 0.5) {
+  createPathD(p1, p2, lineType = 'orthogonal', fromPort = 'right', toPort = 'left', midRatio = 0.5, bend = null) {
     if (isBranchPort(fromPort)) fromPort = 'right'; // branch ports leave to the right
+    if (bend) return this.createBentPathD(p1, p2, lineType, fromPort, toPort, bend);
     if (lineType === 'straight') {
       return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     }
@@ -202,6 +246,75 @@ export class Connections {
     }
     // Default: Professional Orthogonal
     return this.createOrthogonalPathD(p1, p2, fromPort, toPort, midRatio);
+  }
+
+  // Absolute bend point of an edge (stored relative to the middle of its two ends)
+  bendPoint(edge, p1, p2) {
+    if (!edge.bend) return null;
+    return { x: (p1.x + p2.x) / 2 + edge.bend.dx, y: (p1.y + p2.y) / 2 + edge.bend.dy };
+  }
+
+  // Path through a user-dragged bend point b
+  createBentPathD(p1, p2, lineType, fromPort, toPort, b) {
+    if (lineType === 'straight') return `M ${p1.x} ${p1.y} L ${b.x} ${b.y} L ${p2.x} ${p2.y}`;
+    if (lineType === 'bezier') {
+      // quadratic curve that passes through b at its middle
+      const qx = 2 * b.x - (p1.x + p2.x) / 2, qy = 2 * b.y - (p1.y + p2.y) / 2;
+      return `M ${p1.x} ${p1.y} Q ${qx} ${qy}, ${p2.x} ${p2.y}`;
+    }
+    const H = (p) => p === 'right' || p === 'left';
+    const out = 24;
+    let pts;
+    if (H(fromPort) && H(toPort)) {
+      const lo = Math.min(p1.y, p2.y) - 30, hi = Math.max(p1.y, p2.y) + 30;
+      if (b.y < lo || b.y > hi) { // pulled above/below both ends: go around at that height
+        const ox = p1.x + (fromPort === 'right' ? out : -out);
+        const ix = p2.x + (toPort === 'left' ? -out : out);
+        pts = [p1, { x: ox, y: p1.y }, { x: ox, y: b.y }, { x: ix, y: b.y }, { x: ix, y: p2.y }, p2];
+      } else {
+        pts = [p1, { x: b.x, y: p1.y }, { x: b.x, y: p2.y }, p2];
+      }
+    } else if (!H(fromPort) && !H(toPort)) {
+      const lo = Math.min(p1.x, p2.x) - 30, hi = Math.max(p1.x, p2.x) + 30;
+      if (b.x < lo || b.x > hi) { // pulled to the side of both ends
+        const oy = p1.y + (fromPort === 'bottom' ? out : -out);
+        const iy = p2.y + (toPort === 'top' ? -out : out);
+        pts = [p1, { x: p1.x, y: oy }, { x: b.x, y: oy }, { x: b.x, y: iy }, { x: p2.x, y: iy }, p2];
+      } else {
+        pts = [p1, { x: p1.x, y: b.y }, { x: p2.x, y: b.y }, p2];
+      }
+    } else if (H(fromPort)) {
+      pts = [p1, { x: b.x, y: p1.y }, { x: b.x, y: b.y }, { x: p2.x, y: b.y }, p2];
+    } else {
+      pts = [p1, { x: p1.x, y: b.y }, { x: b.x, y: b.y }, { x: b.x, y: p2.y }, p2];
+    }
+    return this.roundedPolyline(pts, 8);
+  }
+
+  // Orthogonal polyline with rounded corners (collinear / repeated points dropped)
+  roundedPolyline(points, r) {
+    const pts = [];
+    points.forEach(p => {
+      const last = pts[pts.length - 1];
+      if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) return;
+      pts.push(p);
+    });
+    const clean = pts.filter((p, i) => {
+      if (i === 0 || i === pts.length - 1) return true;
+      const a = pts[i - 1], c = pts[i + 1];
+      return !((Math.abs(a.x - p.x) < 0.5 && Math.abs(p.x - c.x) < 0.5) || (Math.abs(a.y - p.y) < 0.5 && Math.abs(p.y - c.y) < 0.5));
+    });
+    let d = `M ${clean[0].x} ${clean[0].y}`;
+    for (let i = 1; i < clean.length - 1; i++) {
+      const a = clean[i - 1], p = clean[i], c = clean[i + 1];
+      const lin = Math.hypot(p.x - a.x, p.y - a.y), lout = Math.hypot(c.x - p.x, c.y - p.y);
+      const cr = Math.min(r, lin / 2, lout / 2);
+      const ux = (p.x - a.x) / (lin || 1), uy = (p.y - a.y) / (lin || 1);
+      const vx = (c.x - p.x) / (lout || 1), vy = (c.y - p.y) / (lout || 1);
+      d += ` L ${p.x - ux * cr} ${p.y - uy * cr} Q ${p.x} ${p.y}, ${p.x + vx * cr} ${p.y + vy * cr}`;
+    }
+    const end = clean[clean.length - 1];
+    return d + ` L ${end.x} ${end.y}`;
   }
 
   // Branch edges of one decision node turn at staggered x positions so their vertical
@@ -218,10 +331,10 @@ export class Connections {
 
   // Node bounding box in world coordinates (rendered size when available)
   getNodeRect(node) {
-    const tl = this.getPortCoordinates(node, 'left');
-    const br = this.getPortCoordinates(node, 'right');
+    const top = this.getPortCoordinates(node, 'top');
     const bottom = this.getPortCoordinates(node, 'bottom');
-    return { x: node.x, y: node.y, w: br.x - tl.x, h: bottom.y - node.y };
+    const w = (top.x - node.x) * 2; // top port is at the horizontal centre of the box
+    return { x: node.x, y: node.y, w, h: bottom.y - node.y };
   }
 
   // Put the label on the path where it covers no node and no other label:
@@ -259,7 +372,8 @@ export class Connections {
       const p2 = this.getPortCoordinates(toNode, edge.toPort || 'left');
       
       const lineType = edge.lineType || 'orthogonal';
-      const d = this.createPathD(p1, p2, lineType, edge.fromPort, edge.toPort, this.branchMidRatio(fromNode, edge.fromPort));
+      const bend = this.bendPoint(edge, p1, p2);
+      const d = this.createPathD(p1, p2, lineType, edge.fromPort, edge.toPort, this.branchMidRatio(fromNode, edge.fromPort), bend);
 
       const isSelected = this.state.selectedEdgeId === edge.id;
 
@@ -332,9 +446,31 @@ export class Connections {
         obstacles.push({ x: pos.x - labelWidth / 2, y: pos.y - labelHeight / 2, w: labelWidth, h: labelHeight });
       }
 
+      // Selected edge: a handle to show it can be pulled into a new shape
+      if (isSelected) {
+        let hp = bend;
+        if (!hp) { try { const len = visiblePath.getTotalLength(); hp = visiblePath.getPointAtLength(len / 2); } catch (err) { hp = null; } }
+        if (hp) {
+          const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          handle.setAttribute('class', 'edge-bend-handle');
+          handle.setAttribute('cx', hp.x);
+          handle.setAttribute('cy', hp.y);
+          handle.setAttribute('r', 6);
+          g.appendChild(handle);
+        }
+      }
+
+      // Pressing on a line and dragging pulls it into a new shape
+      g.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        this.bendDrag = { edgeId: edge.id, x: e.clientX, y: e.clientY, started: false };
+      });
+
       // Edge Selection
       g.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (this.suppressEdgeClick) { this.suppressEdgeClick = false; return; }
         if (isSecondClick('edge:' + edge.id)) {
           this.state.emit('quick:edge-label', edge.id);
           return;

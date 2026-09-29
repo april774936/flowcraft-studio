@@ -450,3 +450,33 @@
 .workflow-node.drop-target.shape-process,
 .workflow-node.drop-target.shape-terminal { box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.55), var(--shadow-lg); }
 .workflow-node.drop-target .node-shape { filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.6)); }
+
+/* ---------- Audit flowchart symbols ---------- */
+.workflow-node.shape-offpage { width: 160px; min-height: 100px; }
+.shape-offpage .node-body { padding: 12px 16px 36px; align-items: center; text-align: center; }
+
+.workflow-node.shape-onpage { width: 96px; height: 96px; min-height: 96px; }
+.shape-onpage .node-body { height: 100%; padding: 10px; justify-content: center; align-items: center; text-align: center; }
+
+.workflow-node.shape-filing { width: 170px; min-height: 124px; }
+.shape-filing .node-body { padding: 12px 38px 56px; align-items: center; text-align: center; }
+
+.workflow-node.shape-invtrap { width: 240px; min-height: 84px; }
+.shape-invtrap .node-body { padding: 14px 50px 16px; align-items: center; text-align: center; }
+
+.shape-offpage .node-header,
+.shape-onpage .node-header,
+.shape-filing .node-header,
+.shape-invtrap .node-header { justify-content: center; width: 100%; }
+.shape-offpage .node-title,
+.shape-onpage .node-title,
+.shape-filing .node-title,
+.shape-invtrap .node-title { flex: 0 1 auto; text-align: center; }
+.shape-onpage .node-title,
+.shape-filing .node-title { -webkit-line-clamp: 3; }
+
+/* Side ports sit on the slanted outline */
+.shape-filing .node-port-left { left: calc(25% - 6px); }
+.shape-filing .node-port-right { right: calc(25% - 6px); }
+.shape-invtrap .node-port-left { left: calc(10% - 6px); }
+.shape-invtrap .node-port-right { right: calc(10% - 6px); }
