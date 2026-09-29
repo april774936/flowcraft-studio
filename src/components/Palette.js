@@ -52,6 +52,24 @@ export const NodeLibrary = [
         color: '#8b5cf6'
       },
       {
+        type: 'condition',
+        category: 'condition',
+        title: '다중 분기 (N갈래)',
+        desc: '결과에 따라 여러 경로로 분기',
+        icon: 'condition',
+        color: '#8b5cf6',
+        branches: ['경우 A', '경우 B', '경우 C']
+      },
+      {
+        type: 'action',
+        category: 'action',
+        title: '체크리스트 단계',
+        desc: '여러 확인 항목을 가진 단계',
+        icon: 'check',
+        color: '#10b981',
+        checklist: ['확인 항목 1', '확인 항목 2', '확인 항목 3']
+      },
+      {
         type: 'action',
         category: 'action',
         title: '데이터 필터/변환',
@@ -275,6 +293,12 @@ export class Palette {
         name: '🛍️ 이커머스 결제 & 자동 배포',
         badge: '쇼핑몰/주문',
         desc: '주문 접수, 재고 확인, 분기 처리 및 카카오 알림톡 발송까지 포함된 완전한 결제 플로우'
+      },
+      {
+        key: 'realestate',
+        name: '🏠 부동산 매매 절차',
+        badge: '체크리스트/다중분기',
+        desc: '매물 확인 → 결과별 3갈래 분기 → 계약서 작성 → 잔금·등기까지 단계별 확인 항목 포함'
       },
       {
         key: 'cicd',

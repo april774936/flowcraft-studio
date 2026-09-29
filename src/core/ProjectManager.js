@@ -439,6 +439,48 @@ export class ProjectManager {
     if (key === 'ecommerce') return templates[0];
     if (key === 'cicd') return templates[1];
     
+    if (key === 'realestate') {
+      const N = (id, type, icon, title, x, y, color, extra = {}) =>
+        ({ id, type, category: type, icon, title, desc: '', x, y, color, status: 'idle', memo: '', ...extra });
+      const C = (...items) => items.map((text, i) => ({ id: `ck${i}`, text, done: false }));
+      const E = (id, from, fromPort, to, toPort, label = '') => ({ id, from, fromPort, to, toPort, label, lineType: 'orthogonal' });
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 80, zoom: 0.8 },
+        nodes: [
+          N('re_start', 'start', 'start', '매물 선정', 40, 331, '#10b981'),
+          N('re_check', 'action', 'check', '매물 확인', 300, 190, '#10b981', {
+            checklist: C('하자(누수·균열·곰팡이) 확인', '등기부등본 — 근저당·질권·가압류 확인', '건축물대장 — 위반건축물 여부', '전입세대·체납 세금 확인', '실거래가 시세 비교')
+          }),
+          N('re_decide', 'condition', 'condition', '확인 결과는?', 690, 296, '#8b5cf6', {
+            branches: [{ id: 'ok', label: '이상 없음' }, { id: 'nego', label: '가격 협상 필요' }, { id: 'drop', label: '계약 포기' }]
+          }),
+          N('re_contract', 'document', 'document', '계약서 작성', 1060, 60, '#f59e0b', {
+            checklist: C('매도인 본인·대리권 확인', '계약금·중도금·잔금 일정', '특약사항 (하자 보수·권리 말소)', '중개수수료 확인')
+          }),
+          N('re_nego', 'action', 'message', '가격 재협상', 1060, 380, '#38bdf8', {
+            checklist: C('하자 보수비 견적 받기', '조정 가격 제시')
+          }),
+          N('re_giveup', 'end', 'end', '매수 포기', 1060, 560, '#ef4444'),
+          N('re_close', 'action', 'check', '잔금 및 등기', 1450, 80, '#10b981', {
+            checklist: C('잔금 전 등기부등본 재확인', '잔금 지급 · 열쇠 인수', '소유권 이전 등기 신청', '취득세 납부')
+          }),
+          N('re_end', 'end', 'end', '소유권 이전 완료', 1840, 180, '#ec4899')
+        ],
+        edges: [
+          E('re1', 're_start', 'right', 're_check', 'left'),
+          E('re2', 're_check', 'right', 're_decide', 'left'),
+          E('re3', 're_decide', 'branch:ok', 're_contract', 'left', '이상 없음'),
+          E('re4', 're_decide', 'branch:nego', 're_nego', 'left', '가격 협상 필요'),
+          E('re5', 're_decide', 'branch:drop', 're_giveup', 'left', '계약 포기'),
+          E('re6', 're_nego', 'top', 're_contract', 'bottom', '합의'),
+          E('re7', 're_contract', 'right', 're_close', 'left'),
+          E('re8', 're_close', 'right', 're_end', 'left')
+        ],
+        notes: []
+      };
+    }
+
     if (key === 'timeline_basic') {
       return {
         mode: 'timeline',

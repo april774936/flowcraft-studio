@@ -290,3 +290,81 @@
 .node-quick-add.add-right:hover { transform: translateY(-50%) scale(1.2); }
 .node-quick-add.add-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
 .node-quick-add.add-bottom:hover { transform: translateX(-50%) scale(1.2); }
+
+/* ---------- Checklist (sub-steps) ---------- */
+.workflow-node.has-checklist { width: 260px; }
+.node-progress {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--bg-surface-elevated);
+  font-variant-numeric: tabular-nums;
+}
+.node-progress.complete { color: #fff; background: #10b981; }
+.node-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+.node-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 4px;
+  margin: 0 -4px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.node-check:hover { background: var(--bg-surface-elevated); }
+.node-checkbox {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1.5px solid var(--text-muted);
+  position: relative;
+}
+.node-check.done .node-checkbox { background: #10b981; border-color: #10b981; }
+.node-check.done .node-checkbox::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.node-check.done .node-check-text { color: var(--text-muted); text-decoration: line-through; }
+.node-check-text { word-break: keep-all; overflow-wrap: anywhere; }
+.node-check-more { font-size: 11.5px; color: var(--text-muted); padding: 2px 0 0 22px; }
+
+/* ---------- N-way decision: one output port per branch ---------- */
+.node-port.node-port-branch { transform: none; border-color: #a78bfa; }
+.node-port.node-port-branch:hover { transform: scale(1.4); }
+.branch-tag {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  background: var(--node-fill);
+  border: 1px solid var(--border-medium);
+  pointer-events: none;
+}

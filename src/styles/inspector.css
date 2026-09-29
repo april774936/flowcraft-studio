@@ -213,3 +213,28 @@
   padding: 10px 12px;
   border-radius: var(--border-radius-sm);
 }
+
+/* Checklist / branch list editors */
+.insp-count { color: var(--text-muted); font-weight: 600; margin-left: 4px; text-transform: none; }
+.insp-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+.insp-row { display: flex; align-items: center; gap: 6px; }
+.insp-row .insp-row-input { flex: 1; min-width: 0; padding: 6px 9px; }
+.insp-row.done .insp-row-input { color: var(--text-muted); text-decoration: line-through; }
+.insp-check { width: 16px; height: 16px; accent-color: #10b981; flex-shrink: 0; cursor: pointer; }
+.insp-branch-dot { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: #a78bfa; flex-shrink: 0; margin: 0 4px; }
+.insp-row-btn {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+.insp-row-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.insp-row-btn.danger:hover { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
+.insp-row-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.insp-add-btn { width: 100%; justify-content: center; margin-top: 2px; }
+.insp-add-btn svg { width: 14px; height: 14px; }
+.insp-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
