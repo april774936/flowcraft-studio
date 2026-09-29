@@ -18,8 +18,18 @@ export const SHAPE_PATHS = {
   subprocess: '<path d="M1 1 H99 V99 H1 Z"/><path class="shape-detail" d="M7 1 V99 M93 1 V99"/>',
   io: '<path d="M9 1 H99 L91 99 H1 Z"/>',
   delay: '<path d="M1 1 H76 C104 1 104 99 76 99 H1 Z"/>',
-  milestone: '<path d="M7 1 H93 L99 50 L93 99 H7 L1 50 Z"/>'
+  milestone: '<path d="M7 1 H93 L99 50 L93 99 H7 L1 50 Z"/>',
+  // Audit / system flowchart symbols (set explicitly with node.shape)
+  offpage: '<path d="M1 1 H99 V66 L50 99 L1 66 Z"/>',
+  onpage: '<path d="M50 1 A49 49 0 1 1 49.99 1 Z"/>',
+  filing: '<path d="M1 1 H99 L50 99 Z"/>',
+  invtrap: '<path d="M1 1 H99 L79 99 H21 Z"/>'
 };
+
+// Shapes chosen by the user rather than derived from the node type
+export const EXPLICIT_SHAPES = ['offpage', 'onpage', 'filing', 'invtrap'];
+// Small symbols: title only, no checklist / description
+const COMPACT_SHAPES = ['onpage', 'filing'];
 
 // Roadmap status shown on nodes (independent of the run-simulation status)
 export const PROGRESS_STATES = [
@@ -29,6 +39,7 @@ export const PROGRESS_STATES = [
 ];
 
 export function getNodeShape(node) {
+  if (node.shape && EXPLICIT_SHAPES.includes(node.shape)) return node.shape;
   if (node.type === 'start' || node.type === 'end') return 'terminal';
   if (node.type === 'condition') return 'decision';
   if (node.type === 'manual' || node.type === 'document') return node.type;
@@ -84,6 +95,8 @@ export class NodeRenderer {
       el.style.setProperty('--node-accent', accentColor);
 
       const isRunState = node.status && node.status !== 'idle';
+      // Title-only shapes: description / memo text are not drawn inside them
+      const bare = shape === 'terminal' || shape === 'decision' || COMPACT_SHAPES.includes(shape);
       const branches = shape === 'decision' && Array.isArray(node.branches) ? node.branches : null;
       // N-way decision: inputs on top/left/bottom, one output port per branch (positioned after layout)
       const ports = (branches ? ['top', 'bottom', 'left'] : ['top', 'right', 'bottom', 'left'])
@@ -101,7 +114,7 @@ export class NodeRenderer {
             (shape === 'terminal' ? '' : `<div class="node-quick-add add-bottom" data-direction="bottom" title="${node.type === 'condition' ? 'No 분기 다음 단계 추가' : '하단에 다음 단계 추가'}">+</div>`);
 
       // Checklist (sub-steps) on regular nodes; ticked directly on the canvas
-      const checklist = shape !== 'terminal' && shape !== 'decision' && Array.isArray(node.checklist) ? node.checklist : [];
+      const checklist = shape !== 'terminal' && shape !== 'decision' && !COMPACT_SHAPES.includes(shape) && Array.isArray(node.checklist) ? node.checklist : [];
       const doneCount = checklist.filter(c => c.done).length;
       const checklistHtml = checklist.length ? `
         <div class="node-checklist">
@@ -119,7 +132,7 @@ export class NodeRenderer {
       // Roadmap info: period chip + status pill; finished steps are dimmed
       const progress = PROGRESS_STATES.find(p => p.key === node.progress);
       if (progress) el.classList.add(`progress-${progress.key}`);
-      const metaHtml = (node.period || progress) && shape !== 'decision' ? `
+      const metaHtml = (node.period || progress) && shape !== 'decision' && !COMPACT_SHAPES.includes(shape) ? `
         <div class="node-meta">
           ${node.period ? `<span class="node-period">${this.escapeHtml(node.period)}</span>` : ''}
           ${progress ? `<span class="node-progress-pill p-${progress.key}">${progress.key === 'done' ? '✓ ' : ''}${progress.label}</span>` : ''}
@@ -133,11 +146,11 @@ export class NodeRenderer {
             <div class="node-title" contenteditable="true" spellcheck="false" title="더블클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
             ${progressHtml}
           </div>
-          ${node.desc && shape !== 'terminal' && shape !== 'decision' ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
+          ${node.desc && !bare ? `<div class="node-desc">${this.escapeHtml(node.desc)}</div>` : ''}
           ${checklistHtml}
-          ${node.memo && shape !== 'terminal' && shape !== 'decision' ? `<div class="node-memo" title="${this.escapeHtml(node.memo)}">${Icons.stickyNote}<span>${this.escapeHtml(node.memo)}</span></div>` : ''}
+          ${node.memo && !bare ? `<div class="node-memo" title="${this.escapeHtml(node.memo)}">${Icons.stickyNote}<span>${this.escapeHtml(node.memo)}</span></div>` : ''}
         </div>
-        ${node.memo && (shape === 'terminal' || shape === 'decision') ? `<div class="node-memo-dot" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote}</div>` : ''}
+        ${node.memo && bare ? `<div class="node-memo-dot" title="메모: ${this.escapeHtml(node.memo)}">${Icons.stickyNote}</div>` : ''}
         ${isRunState ? `<div class="node-run-status"><span class="status-dot"></span>${this.getStatusLabel(node.status)}</div>` : ''}
         ${ports}
         ${quickAdds}

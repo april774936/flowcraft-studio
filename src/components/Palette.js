@@ -33,6 +33,10 @@ export const NodeLibrary = [
     items: [
       { type: 'document', category: 'document', title: '자료 / 문서', desc: '교재·자격증·참고 자료', icon: 'book', color: '#f59e0b' },
       { type: 'manual', category: 'manual', title: '직접 할 일', desc: '실습·상담·면접 등 사람이 하는 일', icon: 'user', color: '#f97316' },
+      { type: 'action', category: 'action', shape: 'offpage', title: 'Off-page', desc: '다른 페이지로 이어짐 · 역오각형', icon: 'action', color: '#06b6d4' },
+      { type: 'action', category: 'action', shape: 'onpage', title: 'On-page', desc: '같은 페이지 안 연결점 · 원', icon: 'action', color: '#06b6d4' },
+      { type: 'action', category: 'action', shape: 'filing', title: 'Filing', desc: '문서 보관 · 역삼각형', icon: 'action', color: '#a78bfa' },
+      { type: 'action', category: 'action', shape: 'invtrap', title: 'Decision', desc: '판단 · 역사다리꼴', icon: 'action', color: '#8b5cf6' },
       { type: 'note', category: 'note', title: '스티키 메모', desc: '캔버스에 자유 메모 추가', icon: 'stickyNote', color: '#facc15' }
     ]
   },

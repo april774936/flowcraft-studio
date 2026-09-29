@@ -60,7 +60,18 @@
 
 /* SVG Edge styles - High contrast & luminous */
 /* Invisible grab area around each edge: ~15px either side on screen, at any zoom */
-.edge-hit { stroke-width: calc(30px / var(--zoom, 1)); }
+.edge-hit { stroke-width: calc(30px / var(--zoom, 1)); cursor: move !important; }
+
+/* Handle on the selected edge: drag the line to reshape it */
+.edge-bend-handle {
+  fill: #a78bfa;
+  stroke: #ffffff;
+  stroke-width: 2;
+  cursor: move;
+  pointer-events: all;
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.8));
+}
+body.bending-edge, body.bending-edge * { cursor: move !important; user-select: none; }
 
 .edge-path {
   fill: none;

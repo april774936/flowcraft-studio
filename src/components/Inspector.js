@@ -396,6 +396,11 @@ export class Inspector {
         </div>
       </div>
 
+      <div class="inspector-section">
+        <div class="insp-hint">선을 잡고 끌면 모양이 바뀝니다.</div>
+        ${edge.bend ? `<button class="btn-secondary" id="btn-edge-reset-bend" style="width: 100%; margin-top: 6px;">선 모양 초기화</button>` : ''}
+      </div>
+
       <div class="inspector-section" style="margin-top: 16px;">
         <button class="btn-secondary" id="btn-delete-edge" style="width: 100%; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
           ${Icons.trash} 연결선 삭제
@@ -406,6 +411,10 @@ export class Inspector {
     const labelInp = this.contentArea.querySelector('#inp-edge-label');
     labelInp.addEventListener('change', () => {
       this.state.setEdgeLabel(edge.id, labelInp.value.trim());
+    });
+
+    this.contentArea.querySelector('#btn-edge-reset-bend')?.addEventListener('click', () => {
+      this.state.updateEdge(edge.id, { bend: undefined });
     });
 
     this.contentArea.querySelector('#btn-edge-main').addEventListener('click', () => {

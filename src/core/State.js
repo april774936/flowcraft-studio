@@ -196,6 +196,7 @@ export class State {
       status: 'idle',
       memo: nodeData.memo || ''
     };
+    if (nodeData.shape) node.shape = nodeData.shape;
     if (nodeData.period) node.period = nodeData.period;
     if (nodeData.progress) node.progress = nodeData.progress;
     const checklist = normalizeChecklist(nodeData.checklist);
