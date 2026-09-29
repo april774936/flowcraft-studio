@@ -1,5 +1,5 @@
 // NodeRenderer.js: Flowchart ISO shape rendering, magnetic ports, and Whimsical-style [+] quick connectors
-import { Icons, getIcon } from '../utils/icons.js';
+import { Icons } from '../utils/icons.js';
 import { soundFx } from '../utils/audio.js';
 import { branchPort, branchPortPoint, newItemId } from '../core/Branches.js';
 import { isSecondClick } from '../utils/doubleClick.js';
@@ -127,7 +127,6 @@ export class NodeRenderer {
         <div class="node-body">
           ${metaHtml}
           <div class="node-header">
-            <div class="node-icon" style="color: ${accentColor};">${getIcon(node.icon, node.type)}</div>
             <div class="node-title" contenteditable="true" spellcheck="false" title="클릭하여 이름 변경">${this.escapeHtml(node.title)}</div>
             ${progressHtml}
           </div>

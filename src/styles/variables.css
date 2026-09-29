@@ -89,9 +89,9 @@
   --backdrop-blur: blur(16px) saturate(180%);
 
   /* Layout Dimensions */
-  --header-height: 58px;
-  --sidebar-width: 270px;
-  --inspector-width: 330px;
+  --header-height: 62px;
+  --sidebar-width: 290px;
+  --inspector-width: 350px;
   --border-radius-xs: 4px;
   --border-radius-sm: 8px;
   --border-radius-md: 12px;
