@@ -62,8 +62,10 @@ export class State {
     this.nodes.forEach(n => { if (PLACEHOLDER_DESCS.has(n.desc)) n.desc = ''; });
     this.edges = JSON.parse(JSON.stringify(proj.edges || []));
     this.notes = JSON.parse(JSON.stringify(proj.notes || []));
-    // Time axis (timeline board): only when the project is in timeline mode
-    this.timeline = proj.mode === 'timeline' ? JSON.parse(JSON.stringify(proj.timeline || defaultTimeline(this.nodes))) : null;
+    // Time axis: optional on any board
+    // (older projects made as a "timeline board" without an axis get a default one)
+    this.timeline = proj.timeline ? JSON.parse(JSON.stringify(proj.timeline))
+      : proj.mode === 'timeline' ? defaultTimeline(this.nodes) : null;
     this.viewport = proj.viewport ? { ...proj.viewport } : { x: 80, y: 80, zoom: 1 };
 
     this.selectedNodeIds.clear();
@@ -115,7 +117,7 @@ export class State {
       edges: this.edges,
       notes: this.notes,
       viewport: this.viewport,
-      mode: this.timeline ? 'timeline' : 'flowchart',
+      mode: 'flowchart', // one kind of board; the time axis is an option (timeline)
       timeline: this.timeline || undefined
     });
   }

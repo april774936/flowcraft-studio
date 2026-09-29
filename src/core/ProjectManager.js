@@ -1,5 +1,4 @@
 // ProjectManager: Manages multiple workflows by project
-import { buildColumns } from './Timeline.js';
 
 // Sample projects use a fixed, old timestamp so that on a fresh device they
 // never win a sync merge against the user's edited copies.
@@ -70,7 +69,7 @@ export class ProjectManager {
     return null;
   }
 
-  createProject(name, templateKey = 'blank', mode = 'flowchart') {
+  createProject(name, templateKey = 'blank') {
     const id = 'proj_' + Date.now();
     let initialData = { nodes: [], edges: [], notes: [] };
 
@@ -84,7 +83,7 @@ export class ProjectManager {
     const newProject = {
       id,
       name: name || '새 프로젝트',
-      mode: mode || initialData.mode || 'flowchart',
+      mode: 'flowchart',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       viewport: { x: 80, y: 80, zoom: 1 },
@@ -607,27 +606,6 @@ export class ProjectManager {
       };
     }
 
-    if (key === 'timeline_basic') {
-      const year = new Date().getFullYear();
-      return {
-        mode: 'timeline',
-        timeline: {
-          unit: 'quarter', start: `${year}-Q1`, originX: 120, showOnNodes: false,
-          cols: buildColumns('quarter', `${year}-Q1`, 4, 400)
-        },
-        nodes: [
-          { id: 't1', type: 'start', title: 'Q1 계획', desc: '요구사항 분석', x: 200, y: 200, color: '#10b981', status: 'idle' },
-          { id: 't2', type: 'action', title: 'Q2 개발', desc: 'MVP 개발', x: 600, y: 200, color: '#3b82f6', status: 'idle' },
-          { id: 't3', type: 'end', title: 'Q3 런칭', desc: '프로덕션 배포', x: 1000, y: 200, color: '#ec4899', status: 'idle' }
-        ],
-        edges: [
-          { id: 'e1', from: 't1', to: 't2', fromPort: 'right', toPort: 'left', lineType: 'orthogonal' },
-          { id: 'e2', from: 't2', to: 't3', fromPort: 'right', toPort: 'left', lineType: 'orthogonal' }
-        ],
-        notes: []
-      };
-    }
-    
     return null;
   }
 }

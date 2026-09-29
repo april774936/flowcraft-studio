@@ -335,6 +335,7 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
 
 /* Header pinned to the top of the canvas, follows pan/zoom horizontally */
 .timeline-header {
+  --tl-left: 164px; /* settings + stretch toggle */
   position: absolute;
   top: 0;
   left: 0;
@@ -348,14 +349,14 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
 }
 .tl-track {
   position: absolute;
-  inset: 0 0 0 44px;
+  inset: 0 0 0 var(--tl-left);
   overflow: hidden;
 }
 .tl-cell {
   position: absolute;
   top: 0;
   height: 100%;
-  margin-left: -44px; /* track starts after the settings button */
+  margin-left: calc(-1 * var(--tl-left)); /* track starts after the settings buttons */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -437,7 +438,7 @@ body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-selec
 .tl-add {
   position: absolute;
   top: 8px;
-  margin-left: -44px;
+  margin-left: calc(-1 * var(--tl-left));
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -466,6 +467,37 @@ body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-selec
   z-index: 3;
 }
 .tl-settings-btn:hover { color: var(--primary-light); }
+
+/* 이 칸만 / 전체 : how dragging a column edge stretches the axis */
+.tl-stretch-btn {
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 110px;
+  height: 28px;
+  display: flex;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  margin-left: 4px;
+  cursor: pointer;
+  z-index: 3;
+}
+.tl-stretch-opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.tl-stretch-opt.on { background: var(--primary); color: #fff; }
+.tl-pop-check small { color: var(--text-muted); font-size: 11px; }
 
 .tl-popover {
   position: absolute;
@@ -509,7 +541,7 @@ body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-selec
 .tl-point {
   position: absolute;
   top: 6px;
-  margin-left: -44px;
+  margin-left: calc(-1 * var(--tl-left));
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -634,3 +666,8 @@ body.tl-resizing, body.tl-resizing * { cursor: col-resize !important; user-selec
 /* Keep the dock and minimap above the run console when it is open */
 .canvas-container:has(.simulator-drawer.active) .canvas-floating-dock { bottom: 216px; }
 .canvas-container:has(.simulator-drawer.active) .minimap-container { opacity: 0; pointer-events: none; }
+
+/* Toolbar: 시간축 on/off + its settings, joined */
+.tl-toolbar-group { display: inline-flex; }
+.tl-toolbar-group #btn-timeline-toggle { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.tl-toolbar-group #btn-timeline-settings { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; padding-left: 9px; padding-right: 9px; }

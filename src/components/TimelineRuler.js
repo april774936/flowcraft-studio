@@ -25,6 +25,7 @@ export class TimelineRuler {
       <button class="tl-settings-btn" title="시간축 설정">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
+      <button class="tl-stretch-btn" title="칸 폭 드래그 방식 (드래그 중 Shift = 반대 방식)"></button>
       <div class="tl-popover" hidden></div>`;
     this.container.appendChild(this.header);
     this.track = this.header.querySelector('.tl-track');
@@ -35,6 +36,8 @@ export class TimelineRuler {
     this.header.addEventListener('mousedown', (e) => { if (e.button === 0) e.stopPropagation(); });
     this.header.addEventListener('dblclick', (e) => e.stopPropagation());
     this.header.querySelector('.tl-settings-btn').addEventListener('click', () => this.togglePopover());
+    this.stretchBtn = this.header.querySelector('.tl-stretch-btn');
+    this.stretchBtn.addEventListener('click', () => this.update(t => { t.stretch = t.stretch === 'all' ? 'one' : 'all'; }));
 
     window.addEventListener('mousemove', (e) => this.onDragMove(e));
     window.addEventListener('mouseup', () => this.onDragEnd());
@@ -53,6 +56,9 @@ export class TimelineRuler {
     this.lines.style.display = tl ? '' : 'none';
     if (!tl) { this.closePopover(); return; }
     this.header.classList.toggle('point-mode', tl.unit === 'point');
+    const all = tl.stretch === 'all';
+    this.stretchBtn.classList.toggle('all', all);
+    this.stretchBtn.innerHTML = `<span class="tl-stretch-opt ${all ? '' : 'on'}">${tl.unit === 'point' ? '이 지점만' : '이 칸만'}</span><span class="tl-stretch-opt ${all ? 'on' : ''}">전체</span>`;
     if (tl.unit === 'point') { this.renderPoints(); return; }
 
     // World layer: alternating bands + boundary lines
@@ -142,7 +148,11 @@ export class TimelineRuler {
     e.stopPropagation();
     const c = this.tl.cols[idx];
     const prev = this.tl.cols[idx - 1];
-    this.drag = { kind, idx, x: e.clientX, w: c.w, prevW: prev ? prev.w : 0, origin: this.tl.originX };
+    // Stretch mode: 'one' = only this column / gap, 'all' = every column scales together.
+    // Holding Shift while dragging uses the other mode.
+    const all = (this.tl.stretch === 'all') !== e.shiftKey;
+    this.drag = { kind, idx, x: e.clientX, w: c.w, prevW: prev ? prev.w : 0, origin: this.tl.originX,
+      all, widths: this.tl.cols.map(col => col.w) };
     this.state.beginGesture();
     document.body.classList.add('tl-resizing');
   }
@@ -152,6 +162,22 @@ export class TimelineRuler {
     if (!d || !this.tl) return;
     const dx = (e.clientX - d.x) / this.state.viewport.zoom;
     const col = this.tl.cols[d.idx];
+    if (d.all) {
+      const cols = this.tl.cols;
+      if (d.idx === 0 && d.kind !== 'w') {
+        this.tl.originX = Math.round(d.origin + dx); // start edge / first point: slide the whole axis
+      } else {
+        // Scale every column so the dragged edge / point follows the mouse
+        const span = d.kind === 'point'
+          ? d.widths.slice(0, d.idx).reduce((a, w) => a + w, 0)      // origin → dragged point
+          : d.widths.slice(0, d.idx + 1).reduce((a, w) => a + w, 0); // origin → dragged edge
+        const minW = Math.min(...d.widths);
+        const scale = Math.max((span + dx) / span, MIN_COL_W / minW);
+        cols.forEach((col, i) => { col.w = Math.round(d.widths[i] * scale); });
+      }
+      this.render();
+      return;
+    }
     if (d.kind === 'point') {
       // Move one point between its neighbours; the others stay where they are
       const cols = this.tl.cols;
@@ -262,6 +288,12 @@ export class TimelineRuler {
 
   closePopover() { this.popover.hidden = true; }
 
+  openPopover() {
+    if (!this.tl) this.state.enableTimeline();
+    this.popover.hidden = false;
+    this.renderPopover();
+  }
+
   renderPopover() {
     const tl = this.tl;
     if (!tl) return;
@@ -281,6 +313,7 @@ export class TimelineRuler {
         ? '간격과 설명은 그대로 두고 이름(x1, x2 …)·개수만 바꿉니다. 지점을 더블클릭해 “x1: 대학원 진학”처럼 입력하고, 끌어서 간격을 조절하세요.'
         : '칸 폭은 그대로 두고 이름·개수만 바꿉니다. 이름은 머리글 더블클릭으로 하나씩 바꿀 수도 있어요.'}</div>
       <button class="btn-secondary tl-pop-btn" id="tl-even">${tl.unit === 'point' ? '간격 똑같이' : '칸 폭 똑같이'}</button>
+      <label class="tl-pop-check"><input type="checkbox" id="tl-stretch-all" ${tl.stretch === 'all' ? 'checked' : ''} /> 드래그하면 전체 칸이 같이 늘어남 <small>(끄면 그 칸만 · Shift로 반대)</small></label>
       <label class="tl-pop-check"><input type="checkbox" id="tl-show" ${tl.showOnNodes ? 'checked' : ''} /> ${tl.unit === 'point' ? '노드에 지점 이름 표시' : '노드에 칸 이름 표시'}</label>
       <button class="btn-secondary tl-pop-btn danger" id="tl-off">시간축 끄기</button>`;
     const $ = (id) => this.popover.querySelector(id);
@@ -312,6 +345,7 @@ export class TimelineRuler {
       const avg = Math.round(tl.cols.reduce((a, c) => a + c.w, 0) / tl.cols.length);
       this.update(t => { t.cols.forEach(c => { c.w = avg; }); });
     });
+    $('#tl-stretch-all').addEventListener('change', (e) => this.update(t => { t.stretch = e.target.checked ? 'all' : 'one'; }));
     $('#tl-show').addEventListener('change', (e) => this.update(t => { t.showOnNodes = e.target.checked; }));
     $('#tl-off').addEventListener('click', () => { this.closePopover(); this.state.setTimeline(null); });
     this.popover.querySelectorAll('input, select').forEach(el => el.addEventListener('keydown', (e) => e.stopPropagation()));

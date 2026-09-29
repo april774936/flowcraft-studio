@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.timeline) state.setTimeline(null);
     else state.enableTimeline();
   });
+  document.getElementById('btn-timeline-settings')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (timelineRuler.popover.hidden || !state.timeline) timelineRuler.openPopover();
+    else timelineRuler.closePopover();
+  });
   state.on('timeline:change', syncTlBtn);
   syncTlBtn();
 
