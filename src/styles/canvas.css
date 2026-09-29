@@ -75,16 +75,16 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
 
 .edge-path {
   fill: none;
-  stroke: #60a5fa;
-  stroke-width: 2.5;
+  stroke: var(--edge-color, #60a5fa);
+  stroke-width: 2.2;
   transition: stroke var(--transition-fast), stroke-width var(--transition-fast), filter var(--transition-fast);
   cursor: pointer;
 }
 
 .edge-path:hover {
-  stroke: #38bdf8;
-  stroke-width: 3.8;
-  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.7));
+  stroke: var(--primary-light);
+  stroke-width: 3.2;
+  filter: drop-shadow(0 0 6px var(--primary-glow));
 }
 
 .edge-path.selected {
@@ -123,13 +123,13 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
 }
 
 .edge-arrow {
-  fill: #60a5fa;
+  fill: var(--edge-color, #60a5fa);
   transition: fill var(--transition-fast);
 }
 
 .edge-path:hover + .edge-arrow,
 .edge-path.selected + .edge-arrow {
-  fill: #38bdf8;
+  fill: var(--primary-light);
 }
 
 .edge-arrow.branch-yes { fill: #10b981; }
@@ -247,11 +247,10 @@ body.bending-edge, body.bending-edge * { cursor: move !important; user-select: n
 
 .minimap-viewport {
   position: absolute;
-  border: 1.5px solid var(--primary-light);
-  background: rgba(99, 102, 241, 0.18);
+  border: 1.5px solid color-mix(in srgb, var(--primary-light) 70%, transparent);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
   border-radius: 3px;
   cursor: grab;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
 }
 
 .minimap-viewport:active {

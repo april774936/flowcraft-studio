@@ -1,31 +1,34 @@
 :root {
-  /* Lighter Dark Theme */
-  --bg-dark: #0f172a;
-  --bg-canvas: #1e293b;
-  --bg-surface: #334155;
-  --bg-surface-elevated: #475569;
-  --bg-surface-hover: #64748b;
-  --bg-surface-active: #94a3b8;
-  
-  --bg-glass: rgba(30, 41, 59, 0.78);
-  --bg-glass-card: rgba(51, 65, 85, 0.65);
-  --bg-glass-floating: rgba(30, 41, 59, 0.85);
+  /* Default dark: near-black navy, surfaces step up gently, colour only on accents */
+  --bg-dark: #0c0e15;
+  --bg-canvas: #11141d;
+  --bg-surface: #171b26;
+  --bg-surface-elevated: #1f2432;
+  --bg-surface-hover: #282e3f;
+  --bg-surface-active: #333a4f;
 
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-medium: rgba(255, 255, 255, 0.2);
-  --border-strong: rgba(255, 255, 255, 0.3);
-  --border-active: #818cf8;
+  --bg-glass: rgba(18, 21, 31, 0.82);
+  --bg-glass-card: rgba(30, 35, 49, 0.72);
+  --bg-glass-floating: rgba(22, 26, 37, 0.9);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.11);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-active: #8b8ff8;
+
+  --text-primary: #eceef5;
+  --text-secondary: #aab1c4;
+  --text-muted: #737c94;
+  --text-inverse: #0c0e15;
 
   /* Brand Accents */
-  --primary: #818cf8;
-  --primary-hover: #6366f1;
-  --primary-light: #a5b4fc;
-  --primary-glow: rgba(129, 140, 248, 0.4);
+  --primary: #7b7ff6;
+  --primary-hover: #6368ee;
+  --primary-light: #a9acff;
+  --primary-glow: rgba(123, 127, 246, 0.35);
+
+  /* Connection lines: calm neutral so the nodes carry the colour */
+  --edge-color: #8a93b4;
 
   /* AI Special Theme */
   --ai-gradient: linear-gradient(135deg, #c084fc 0%, #818cf8 45%, #22d3ee 100%);
@@ -33,12 +36,12 @@
   --ai-glow: rgba(192, 132, 252, 0.45);
 
   /* Categorized Node Colors */
-  --node-fill: #253247;
-  --node-bg-default: linear-gradient(180deg, rgba(51, 65, 85, 0.85) 0%, rgba(30, 41, 59, 0.95) 100%);
-  --node-bg-pill: linear-gradient(135deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+  --node-fill: #1b2030;
+  --node-bg-default: linear-gradient(180deg, rgba(31, 36, 50, 0.95) 0%, rgba(24, 28, 40, 0.98) 100%);
+  --node-bg-pill: linear-gradient(135deg, rgba(31, 36, 50, 0.95) 0%, rgba(24, 28, 40, 0.98) 100%);
   --node-bg-diamond: linear-gradient(135deg, rgba(76, 29, 149, 0.9) 0%, rgba(46, 16, 101, 0.95) 100%);
   
-  --node-port-bg: #1e293b;
+  --node-port-bg: #11141d;
 
   --node-trigger: #f59e0b;
   --node-trigger-bg: rgba(245, 158, 11, 0.15);
@@ -58,33 +61,33 @@
   --status-error: #ef4444;
 
   /* Modern Sticky Note Colors (Curated pastel tints) */
-  --note-yellow: #fef9c3;
+  --note-yellow: #f6eec4;
   --note-yellow-text: #713f12;
-  --note-yellow-border: #fde047;
+  --note-yellow-border: #e4d27a;
 
-  --note-green: #dcfce7;
+  --note-green: #d8efe0;
   --note-green-text: #14532d;
-  --note-green-border: #86efac;
+  --note-green-border: #92d6aa;
 
-  --note-blue: #e0f2fe;
+  --note-blue: #dbeaf6;
   --note-blue-text: #075985;
-  --note-blue-border: #7dd3fc;
+  --note-blue-border: #8cc4e6;
 
-  --note-pink: #fce7f3;
+  --note-pink: #f4dfea;
   --note-pink-text: #831843;
-  --note-pink-border: #f9a8d4;
+  --note-pink-border: #e2a9c7;
 
-  --note-purple: #f3e8ff;
+  --note-purple: #e9e0f7;
   --note-purple-text: #581c87;
-  --note-purple-border: #d8b4fe;
+  --note-purple-border: #c3a9e8;
 
   /* Shadows & Depth */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 14px 32px -4px rgba(0, 0, 0, 0.55), 0 4px 12px -2px rgba(0, 0, 0, 0.35);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 24px var(--primary-glow);
-  --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 6px 18px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
 
   --backdrop-blur: blur(16px) saturate(180%);
 
@@ -105,6 +108,7 @@
 }
 
 [data-theme="light"] {
+  --edge-color: #8e98b3;
   --bg-dark: #f8fafc;
   --bg-canvas: #f1f5f9;
   --bg-surface: #ffffff;
@@ -141,6 +145,7 @@
 
 /* 1. Black Theme (블랙 테마) - Ultra-Premium Pitch Black */
 [data-theme="black"] {
+  --edge-color: #7d88a8;
   --bg-dark: #07090e;
   --bg-canvas: #090d16;
   --bg-surface: #0e131f;
