@@ -258,38 +258,53 @@
 .node-port-left:hover { transform: translateY(-50%) scale(1.4); }
 .node-port-right:hover { transform: translateY(-50%) scale(1.4); }
 
-/* ---------- Quick add [+] buttons ---------- */
+/* ---------- Quick add [+] buttons ----------
+   Bigger button + invisible hit area + a hover "bridge" back to the node edge, and the
+   buttons linger briefly after the pointer leaves, so reaching the [+] is forgiving.
+   The hit areas stop short of the connection ports (node edge ±6px). */
 .node-quick-add {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--primary);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   opacity: 0;
-  pointer-events: none;
-  transition: all var(--transition-fast);
-  box-shadow: 0 2px 8px var(--primary-glow);
+  visibility: hidden;
+  transition: opacity 0.15s ease 0.35s, visibility 0s linear 0.5s, transform 0.12s ease, background 0.12s ease;
+  box-shadow: 0 2px 10px var(--primary-glow);
   z-index: 35;
 }
-.workflow-node:hover .node-quick-add {
-  opacity: 0.9;
-  pointer-events: auto;
+.node-quick-add::before,
+.node-quick-add::after {
+  content: "";
+  position: absolute;
+}
+.workflow-node:hover .node-quick-add,
+.workflow-node.selected .node-quick-add {
+  opacity: 0.95;
+  visibility: visible;
+  transition-delay: 0s;
 }
 .node-quick-add:hover {
   opacity: 1;
   background: var(--primary-hover);
 }
-.node-quick-add.add-right { right: -30px; top: 50%; transform: translateY(-50%); }
-.node-quick-add.add-right:hover { transform: translateY(-50%) scale(1.2); }
-.node-quick-add.add-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
-.node-quick-add.add-bottom:hover { transform: translateX(-50%) scale(1.2); }
+.node-quick-add.add-right { right: -40px; top: 50%; transform: translateY(-50%); }
+.node-quick-add.add-right:hover { transform: translateY(-50%) scale(1.15); }
+.node-quick-add.add-right::before { top: -14px; bottom: -14px; left: -6px; right: -16px; }   /* hit area */
+.node-quick-add.add-right::after { top: -14px; bottom: -14px; right: 100%; width: 6px; }       /* bridge to the node */
+.node-quick-add.add-bottom { bottom: -40px; left: 50%; transform: translateX(-50%); }
+.node-quick-add.add-bottom:hover { transform: translateX(-50%) scale(1.15); }
+.node-quick-add.add-bottom::before { left: -14px; right: -14px; top: -6px; bottom: -16px; }
+.node-quick-add.add-bottom::after { left: -14px; right: -14px; bottom: 100%; height: 6px; }
 
 /* ---------- Checklist (sub-steps) ---------- */
 .workflow-node.has-checklist { width: 260px; }
