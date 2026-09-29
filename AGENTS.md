@@ -13,5 +13,5 @@ Read `HANDOFF.md` first for the hub overview and per-project links.
 
 ## flowcraft-studio 자체 규칙
 - 정적 Vite 앱, 열었을 때만 동작(요청-응답형) — 서버 상시구동 불필요.
-- 저장: localStorage(`flowcraft_projects_v2`) + Supabase(`flowcraft_sync`)로 기기간 동기화(`sync.js`).
+- 저장: localStorage(`flowcraft_projects_v2`) + Supabase(`flowcraft_sync`)로 기기간 동기화(`public/sync.js` — Vite는 `public/`만 빌드에 복사하므로 루트로 옮기지 말 것).
 - Vercel에 GitHub 연동 자동배포 — push하면 자동 반영, 별도 배포 명령 불필요.
