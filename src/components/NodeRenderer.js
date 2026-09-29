@@ -94,6 +94,7 @@ export class NodeRenderer {
 
       // Selection & Drag initiation
       el.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // right/middle drag pans the canvas
         if (e.target.closest('.node-port') || e.target.closest('.node-quick-add')) return;
 
         e.stopPropagation();
@@ -146,6 +147,7 @@ export class NodeRenderer {
       // Port Drag Connection Start
       el.querySelectorAll('.node-port').forEach(portEl => {
         portEl.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
           e.stopPropagation();
           const port = portEl.dataset.port;
           const coords = this.connections.getPortCoordinates(node, port);

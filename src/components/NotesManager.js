@@ -50,6 +50,7 @@ export class NotesManager {
 
       // Event: Note Selection & Drag start
       el.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // right/middle drag pans the canvas
         if (e.target.closest('.color-dot') || e.target.closest('.note-delete-btn') || e.target.closest('.note-resize-handle')) {
           return;
         }
@@ -97,6 +98,7 @@ export class NotesManager {
       // Event: Resize handle
       const resizeHandle = el.querySelector('.note-resize-handle');
       resizeHandle.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
         e.stopPropagation();
         this.state.selectNote(note.id);
         this.state.beginGesture();

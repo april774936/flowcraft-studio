@@ -85,8 +85,26 @@ export class Canvas {
       this.state.zoomBy(delta, cursorX, cursorY);
     }, { passive: false });
 
+    // Right-drag pans the canvas, so the browser menu is suppressed on the canvas
+    // (kept inside text fields so copy/paste still works there)
+    this.container.addEventListener('contextmenu', (e) => {
+      if (!e.target.closest('input, textarea, [contenteditable="true"]')) e.preventDefault();
+    });
+
     // Canvas Mouse Down: Pan or Marquee
     this.container.addEventListener('mousedown', (e) => {
+      // Right or middle button drag pans from anywhere on the canvas, even over nodes
+      const isPanButton = e.button === 1 || e.button === 2;
+      if (isPanButton &&
+          !e.target.closest('.minimap-container, .simulator-drawer, .canvas-floating-dock, .sidebar-collapse-toggle, .inspector-collapse-toggle, input, textarea, [contenteditable="true"]')) {
+        e.preventDefault(); // no middle-click autoscroll
+        this.isPanning = true;
+        this.panStart = { x: e.clientX, y: e.clientY };
+        this.initialViewport = { ...this.state.viewport };
+        this.container.classList.add('panning');
+        return;
+      }
+
       // Ignore if clicking on nodes, notes, ports, dock, or controls
       if (
         e.target.closest('.workflow-node') ||
@@ -103,8 +121,8 @@ export class Canvas {
         return;
       }
 
-      // Pan Trigger: isPanMode, Middle click, Space key held, or Shift click
-      const isPanTrigger = this.isPanMode || e.button === 1 || e.shiftKey || this.spaceHeld;
+      // Pan Trigger: isPanMode, Space key held, or Shift click (right/middle handled above)
+      const isPanTrigger = this.isPanMode || e.shiftKey || this.spaceHeld;
 
       if (isPanTrigger || e.button === 0) {
         if (isPanTrigger) {
@@ -179,38 +197,12 @@ export class Canvas {
       if (this.isMarquee) {
         this.isMarquee = false;
         this.marquee.style.display = 'none';
-        
-        const minX = Math.min(this.marqueeStart.world.x, currentWorld.x);
-        const minY = Math.min(this.marqueeStart.world.y, currentWorld.y);
-        const maxX = Math.max(this.marqueeStart.world.x, currentWorld.x);
-        const maxY = Math.max(this.marqueeStart.world.y, currentWorld.y);
-
-        let first = true;
-        this.state.nodes.forEach(node => {
-          const nodeWidth = 240; // rough max width of nodes
-          const nodeHeight = 120; // rough max height
-          if (node.x < maxX && (node.x + nodeWidth) > minX && 
-              node.y < maxY && (node.y + nodeHeight) > minY) {
-            this.state.selectNode(node.id, !first);
-            first = false;
-          }
-        });
-        
-        // Also check sticky notes
-        this.state.notes.forEach(note => {
-          const noteW = note.width || 200;
-          const noteH = note.height || 200;
-          if (note.x < maxX && (note.x + noteW) > minX && 
-              note.y < maxY && (note.y + noteH) > minY) {
-            if (first) {
-               this.state.selectNote(note.id);
-               first = false;
-            }
-          }
-        });
-        
-        if (first) {
-          this.state.clearSelection();
+        // mousemove already selected the fully enclosed nodes; re-select through the
+        // state API so the inspector and listeners get a selection:change event
+        const ids = Array.from(this.state.selectedNodeIds);
+        if (ids.length) {
+          this.state.selectedNodeIds.clear();
+          ids.forEach((id, i) => this.state.selectNode(id, i > 0));
         }
       }
     });
@@ -234,8 +226,10 @@ export class Canvas {
     });
   }
 
-  // Get shape-aware node dimensions
+  // Get shape-aware node dimensions (rendered size when available)
   getNodeDimensions(node) {
+    const measured = this.state.measureNode && this.state.measureNode(node);
+    if (measured) return { w: measured.width, h: measured.height };
     if (node.type === 'start' || node.type === 'end') {
       return { w: 175, h: 54 };
     } else if (node.type === 'condition') {
