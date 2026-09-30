@@ -2,8 +2,8 @@
 // POST { prompt } → { plan, provider }. The browser turns the plan into nodes (src/ai/DraftBuilder.js).
 //
 // Keys live only in Vercel → Project → Settings → Environment Variables (never in the repo):
-//   ANTHROPIC_API_KEY   → Claude (used when set)
-//   GEMINI_API_KEY      → Gemini (used when no Claude key); optional GEMINI_MODEL
+//   GEMINI_API_KEY      → Gemini (preferred when set); optional GEMINI_MODEL
+//   ANTHROPIC_API_KEY   → Claude (used when there is no Gemini key)
 //   FLOWCRAFT_AI_CODE   → optional passphrase; when set, requests must send it
 //                         (keeps strangers from spending your API credit)
 // With no key the endpoint answers 501 and the app falls back to its built-in text parser.
@@ -122,8 +122,8 @@ export default async function handler(req, res) {
   if (!prompt) return res.status(400).json({ error: 'prompt', message: '만들 흐름을 적어주세요.' });
 
   try {
-    const plan = hasClaude ? await withClaude(prompt) : await withGemini(prompt);
-    return res.status(200).json({ plan, provider: hasClaude ? 'claude' : 'gemini' });
+    const plan = hasGemini ? await withGemini(prompt) : await withClaude(prompt);
+    return res.status(200).json({ plan, provider: hasGemini ? 'gemini' : 'claude' });
   } catch (err) {
     if (err instanceof Anthropic.RateLimitError) return res.status(429).json({ error: 'rate', message: '요청이 많아요. 잠시 후 다시 시도해 주세요.' });
     if (err instanceof Anthropic.AuthenticationError) return res.status(502).json({ error: 'auth', message: 'API 키가 올바르지 않아요.' });
