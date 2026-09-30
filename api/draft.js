@@ -1,5 +1,5 @@
 // api/draft.js — Vercel serverless function: text → flow plan (JSON) with a real LLM.
-// POST { prompt } → { plan, provider }. The browser turns the plan into nodes (src/ai/DraftBuilder.js).
+// POST { prompt } → { plan, provider }. GET → { ready, provider } (which AI is configured). The browser turns the plan into nodes (src/ai/DraftBuilder.js).
 //
 // Keys live only in Vercel → Project → Settings → Environment Variables (never in the repo):
 //   GEMINI_API_KEY      → Gemini (preferred when set); optional GEMINI_MODEL
@@ -105,8 +105,13 @@ async function withGemini(prompt) {
 }
 
 export default async function handler(req, res) {
+  // GET: is AI configured? (no key values, just which provider would answer)
+  if (req.method === 'GET') {
+    const provider = process.env.GEMINI_API_KEY ? 'gemini' : process.env.ANTHROPIC_API_KEY ? 'claude' : null;
+    return res.status(200).json({ ready: !!provider, provider, codeRequired: !!process.env.FLOWCRAFT_AI_CODE });
+  }
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: 'method' });
   }
   const code = process.env.FLOWCRAFT_AI_CODE;
