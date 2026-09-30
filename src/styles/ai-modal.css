@@ -161,3 +161,10 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* Gemini key saved in this browser (shown when the server has no AI key) */
+.ai-key-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; }
+.ai-key-row[hidden] { display: none; }
+.ai-key-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.ai-key-row .inspector-input { flex: 1; min-width: 0; }
+.ai-key-status { font-size: 12px; color: var(--text-muted); white-space: nowrap; }

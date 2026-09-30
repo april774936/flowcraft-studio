@@ -1,6 +1,12 @@
 // AIModal.js: AI Workflow Draft Generator modal with presets, streaming feedback, and auto-layout
 import { AIPresets } from '../ai/AIPresets.js';
 import { Icons } from '../utils/icons.js';
+import { GEMINI_KEY_STORE } from '../ai/AIEngine.js';
+
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { /* private mode */ } }
+};
 
 export class AIModal {
   constructor(state, aiEngine, modalOverlay, canvas) {
@@ -22,7 +28,26 @@ export class AIModal {
     this.renderPresets();
   }
 
+  // Key row: only when the server has no AI key (then the browser calls Gemini itself)
+  async refreshKeyRow() {
+    const row = document.getElementById('ai-key-row');
+    if (!row) return;
+    if (this.serverReady === undefined) {
+      try {
+        const r = await fetch('/api/draft');
+        const d = r.ok ? await r.json() : null;
+        this.serverReady = !!(d && d.ready);
+      } catch (e) { this.serverReady = false; }
+    }
+    row.hidden = this.serverReady;
+    const saved = store.get(GEMINI_KEY_STORE);
+    document.getElementById('ai-key-status').textContent = saved ? '저장됨 ✓' : '없으면 기본 규칙으로 그려요';
+    document.getElementById('ai-key-input').value = '';
+    document.getElementById('ai-key-input').placeholder = saved ? '저장됨 — 바꾸려면 새 키를 붙여넣기' : '키를 붙여넣으면 이 브라우저에만 저장돼요';
+  }
+
   open() {
+    this.refreshKeyRow();
     this.formView.style.display = 'flex';
     this.generatingView.style.display = 'none';
     this.overlay.classList.add('active');
@@ -57,6 +82,13 @@ export class AIModal {
       if (e.target === this.overlay) this.close();
     });
 
+    document.getElementById('ai-key-save')?.addEventListener('click', () => {
+      const v = document.getElementById('ai-key-input').value.trim();
+      if (!v) return;
+      store.set(GEMINI_KEY_STORE, v);
+      this.refreshKeyRow();
+    });
+
     document.getElementById('btn-generate-ai-draft')?.addEventListener('click', () => {
       this.generate();
     });
@@ -75,7 +107,7 @@ export class AIModal {
     this.formView.style.display = 'none';
     this.generatingView.style.display = 'flex';
     this.progressStatus.textContent = 'AI가 흐름을 설계하고 있어요…';
-    this.progressSubstatus.textContent = '단계 · 분기 · 체크리스트 · 기간을 정리하는 중 (10~30초)';
+    this.progressSubstatus.textContent = '단계 · 분기 · 체크리스트 · 기간을 정리하는 중 (보통 20~40초)';
 
     try {
       const result = await this.aiEngine.generateDraft(promptText, {
