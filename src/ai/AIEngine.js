@@ -1,6 +1,10 @@
 // AIEngine.js: Natural language workflow draft generator, intelligent graph parser, and active manipulation copilot
 import { AutoLayout } from '../core/AutoLayout.js';
 import { buildGraph, parseTextToPlan } from './DraftBuilder.js';
+import { geminiPlan } from './planPrompt.js';
+
+// Gemini key typed into the AI window: kept only in this browser (never synced or committed)
+export const GEMINI_KEY_STORE = 'flowcraft_gemini_key';
 
 const safeGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
@@ -59,9 +63,15 @@ export class AIEngine {
     try {
       r = await fetch('/api/draft', { method: 'POST', headers, body: JSON.stringify({ prompt }) });
     } catch (e) {
-      return null; // offline
+      r = null; // offline / no server
     }
-    if (r.status === 404 || r.status === 405 || r.status === 501) return null;
+    if (!r || r.status === 404 || r.status === 405 || r.status === 501) {
+      // No AI on the server: use the Gemini key saved in this browser, if any
+      const key = safeGet(GEMINI_KEY_STORE);
+      if (!key) return null;
+      const { plan } = await geminiPlan(key, prompt, { timeoutMs: 60000 });
+      return { plan, provider: 'gemini' };
+    }
     const data = await r.json().catch(() => ({}));
     if (r.status === 401 && !retried) {
       const entered = window.prompt('AI 사용 코드를 입력하세요 (Vercel의 FLOWCRAFT_AI_CODE)');
