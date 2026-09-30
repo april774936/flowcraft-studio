@@ -292,6 +292,10 @@
     badgeEl.addEventListener('mouseenter', () => (badgeEl.style.opacity = '1'));
     badgeEl.addEventListener('mouseleave', () => (badgeEl.style.opacity = '.85'));
     badgeEl.addEventListener('click', onBadgeClick);
+    // 폰·세로 태블릿: 아이콘만(캔버스 하단 도구막대와 겹치지 않게) — 전체 문구는 title로
+    const st = document.createElement('style');
+    st.textContent = '@media (max-width:900px){#flowcraftSyncBadge .sb-txt{display:none}#flowcraftSyncBadge{padding:7px 9px!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;right:12px!important}}';
+    document.head.appendChild(st);
     document.body.appendChild(badgeEl);
     return badgeEl;
   }
@@ -309,7 +313,12 @@
       remote: '🔄 다른 기기 변경사항 있음 · 클릭해서 불러오기',
       error: '⚠️ 동기화 오류 · 클릭'
     };
-    el.textContent = map[state] || map.nocode;
+    const text = map[state] || map.nocode;
+    const sp = text.indexOf(' ');
+    const ico = document.createElement('span'); ico.textContent = text.slice(0, sp);
+    const txt = document.createElement('span'); txt.className = 'sb-txt'; txt.textContent = text.slice(sp);
+    el.replaceChildren(ico, txt);
+    el.title = text;
   }
 
   function onBadgeClick() {

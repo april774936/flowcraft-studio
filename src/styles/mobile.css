@@ -1,0 +1,105 @@
+/* mobile.css: phones and iPad (loaded last, so it only overrides) */
+
+/* iOS: 100vh includes the area under the browser bars */
+#app { height: 100dvh; }
+.app-body { height: calc(100dvh - var(--header-height)); }
+.home-dashboard-overlay { height: 100dvh; }
+
+/* Canvas owns every touch (TouchInput.js); no browser scroll/zoom/text-selection on it */
+.canvas-container { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.canvas-container input, .canvas-container textarea, .canvas-container [contenteditable="true"]:focus { -webkit-user-select: text; user-select: text; }
+
+/* ---------- Touch devices (phones + iPad, any width) ---------- */
+@media (pointer: coarse) {
+  /* iOS Safari zooms the page when focusing inputs smaller than 16px */
+  input, textarea, select, [contenteditable="true"] { font-size: 16px; }
+  .sidebar-search input, .inspector-body input, .inspector-body textarea, .inspector-body select { font-size: 16px !important; }
+
+  /* Fingers need bigger targets than a cursor */
+  .node-port { width: 18px; height: 18px; }
+  .node-port-top { top: -10px; } .node-port-bottom { bottom: -10px; }
+  .node-port-left { left: -10px; } .node-port-right { right: -10px; }
+  .node-quick-add { width: 34px; height: 34px; }
+  .sidebar-collapse-toggle, .inspector-collapse-toggle { width: 30px; height: 60px; font-size: 14px; }
+  .btn-icon { min-width: 36px; min-height: 36px; }
+
+  /* No hover on touch: keep hover-revealed controls visible where they matter */
+  .canvas-note .note-resize-handle, .tl-cell .tl-del, .tl-point .tl-del { opacity: 1; }
+}
+
+/* ---------- Narrow: phones and portrait iPad ---------- */
+@media (max-width: 900px) {
+  :root { --header-height: 110px; }
+
+  /* Header: two rows. The three groups dissolve (display: contents) so their buttons can be
+     re-ordered: [home · project · undo/redo · fit · theme] / [AI · note · layout · timeline · export · bg · 고급] */
+  .app-header {
+    flex-wrap: wrap; align-content: center; justify-content: center;
+    row-gap: 6px; column-gap: 6px; padding: 6px 10px;
+  }
+  .header-left, .header-center, .header-right { display: contents; }
+  .app-header::after { content: ""; order: 6; flex-basis: 100%; height: 0; }
+  #btn-go-home { order: 1; }
+  .project-selector-btn { order: 2; flex: 1 1 0; min-width: 0; max-width: none; }
+  .header-right > .action-pill-group { order: 3; }
+  .zoom-controls { order: 4; }
+  #theme-dropdown { order: 5; }
+  #btn-ai-draft, #ai-copilot-dropdown { order: 7; }
+  .header-center > .action-pill-group, #btn-run-simulation { order: 8; }
+  #export-dropdown { order: 9; }
+  .color-swatch-btn { order: 10; }
+  #btn-advanced-toggle { order: 11; }
+  @media (max-width: 600px) {
+    #btn-advanced-toggle { order: 5; }
+    #theme-dropdown { order: 9; }
+    .color-swatch-btn { display: none; }
+  }
+  .project-name-display { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logo-area, .app-header .header-divider,
+  #btn-sound-toggle, #btn-help-toggle, #btn-zoom-in, #btn-zoom-out, .zoom-level-text { display: none; }
+  .app-header .btn-label { display: none !important; }
+  .btn-advanced { padding: 8px 10px; }
+
+  /* Side panels become drawers over the canvas instead of squeezing it */
+  .app-sidebar, .app-inspector {
+    position: absolute; top: 0; bottom: 0; z-index: 70;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.45);
+  }
+  .app-sidebar { left: 0; width: min(86vw, var(--sidebar-width)); }
+  .app-inspector { right: 0; width: min(92vw, var(--inspector-width)); }
+  .app-body.sidebar-collapsed .app-sidebar { transform: translateX(-100%); margin-right: 0; box-shadow: none; }
+  .app-body.inspector-collapsed .app-inspector { transform: translateX(100%); margin-left: 0; box-shadow: none; }
+  .sidebar-collapse-toggle { left: min(86vw, var(--sidebar-width)); z-index: 71; }
+  .inspector-collapse-toggle { right: min(92vw, var(--inspector-width)); z-index: 71; }
+  .app-body.sidebar-collapsed .sidebar-collapse-toggle { left: 0; }
+  .app-body.inspector-collapsed .inspector-collapse-toggle { right: 0; }
+
+  .canvas-floating-dock { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  /* While a drawer is open the canvas chrome underneath just gets in the way */
+  .app-body:not(.sidebar-collapsed) .canvas-floating-dock,
+  .app-body:not(.inspector-collapsed) .canvas-floating-dock,
+  .app-body:not(.sidebar-collapsed) .minimap-container,
+  .app-body:not(.inspector-collapsed) .minimap-container,
+  .app-body:not(.inspector-collapsed) .sidebar-collapse-toggle,
+  .app-body:not(.sidebar-collapsed) .inspector-collapse-toggle { display: none; }
+  .minimap-container { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); right: 12px; width: 150px; height: 100px; }
+
+  /* Home dashboard: menu becomes a tab row above the projects */
+  .dashboard-header { padding: 0 16px; height: 56px; }
+  .dashboard-layout { flex-direction: column; }
+  .dashboard-sidebar {
+    width: auto; flex-direction: row; padding: 8px 12px; gap: 4px; overflow-x: auto;
+    border-right: none; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .dashboard-sidebar::-webkit-scrollbar { display: none; }
+  .dashboard-sidebar .sidebar-menu-item { white-space: nowrap; padding: 8px 12px; flex-shrink: 0; }
+  .dashboard-sidebar > div[style*="flex"] { display: none; } /* spacer that pushed 환경설정 to the bottom */
+  .dashboard-body { padding: 20px 16px calc(80px + env(safe-area-inset-bottom, 0px)); }
+  .dashboard-section-title { font-size: 22px; margin-bottom: 16px; }
+}
+
+@media (max-width: 600px) {
+  .minimap-container { display: none; }
+  .project-grid { grid-template-columns: 1fr !important; }
+}

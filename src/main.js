@@ -2,6 +2,7 @@
 import { ProjectManager } from './core/ProjectManager.js';
 import { State } from './core/State.js';
 import { Canvas } from './core/Canvas.js';
+import { TouchInput } from './core/TouchInput.js';
 import { Connections } from './core/Connections.js';
 import { Simulator } from './core/Simulator.js';
 import { AIEngine } from './ai/AIEngine.js';
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const marquee = document.getElementById('selection-marquee');
 
   const canvas = new Canvas(state, container, world, grid, guideX, guideY, marquee);
+  new TouchInput(state, canvas); // phones / iPad: touch → the same mouse interactions + pinch zoom
   const timelineRuler = new TimelineRuler(state, document.getElementById('timeline-ruler'), world, container);
 
   // Time axis on/off (timeline board)
@@ -180,7 +182,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inspectorToggle) inspectorToggle.textContent = open ? '▶' : '◀';
   };
   setInspectorOpen(false);
-  state.on('selection:change', (sel) => setInspectorOpen(sel && sel.type !== 'none'));
+  // Phones / portrait tablets: the side panels are drawers over the canvas (mobile.css), so the
+  // palette starts closed and selecting a node doesn't cover the canvas with the inspector —
+  // it opens from its edge tab instead
+  const narrow = window.matchMedia('(max-width: 900px)');
+  const sidebarToggle = document.getElementById('btn-toggle-sidebar');
+  const setSidebarOpen = (open) => {
+    appBody?.classList.toggle('sidebar-collapsed', !open);
+    if (sidebarToggle) sidebarToggle.textContent = open ? '◀' : '▶';
+  };
+  if (narrow.matches) setSidebarOpen(false);
+  narrow.addEventListener?.('change', (e) => { if (e.matches) { setSidebarOpen(false); setInspectorOpen(false); } });
+  // Adding from the palette on a narrow screen closes the drawer so the new node is visible
+  sidebarContentArea?.addEventListener('click', (e) => {
+    if (narrow.matches && e.target.closest('.palette-item, .template-card')) setSidebarOpen(false);
+  });
+  state.on('selection:change', (sel) => { if (!narrow.matches || !sel || sel.type === 'none') setInspectorOpen(sel && sel.type !== 'none'); });
   document.getElementById('btn-close-inspector')?.addEventListener('click', () => setInspectorOpen(false));
 
   // 9. Minimap
