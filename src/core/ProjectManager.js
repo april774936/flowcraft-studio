@@ -707,11 +707,22 @@ export class ProjectManager {
           desc: '진학 시점은 경력 종료 시점에 따라 이동. MBA 기간의 YPP 경력 산입 여부는 지원 시점에 공식 FAQ로 확인'
         }),
         TN('io_ypp', 'end', 'target', 'WBG YPP · 금융기구 복귀', 5400, 315, '#ec4899', {
-          desc: '석사 + 경력 2~6년 · 회원국 국적 · 매년 9월 지원 (2025: 9/1~9/30) · JPA · 과거 인턴 지원 가능'
+          desc: '석사(MBA 포함) + 경력 2~6년 · 회원국 국적 · 매년 9월 지원 (2025: 9/1~9/30) · JPA · 과거 인턴 지원 가능'
         }),
 
         // ---- 석사 (직접 구체화) ----
-        TN('io_mast', 'action', 'book', '졸업 후 석사', 760, 1800, '#f59e0b', { period: '0년~', desc: '세부 경로는 직접 구체화. 이 노드에서 이어서 그리기' })
+        TN('io_mast', 'action', 'book', '국내 석사', 760, 1800, '#f59e0b', {
+          period: '0년~', desc: '세부 경로는 직접 구체화. 석사라서 열리는 프로그램',
+          checklist: TC(
+            'ADB 인턴: 석사 재학 · 8~12주 · 유급 · 3월 중순 마감',
+            'AIIB 인턴: 석사 재학 또는 당해 졸업 · 일당 USD 90 + 항공권 · 12~2월 지원',
+            'WBG Pioneers: 석사 재학 · 시급 지급 · 서울 / DC · 1~2월, 7~8월 지원',
+            'IMF FIP: 경제 등 대학원생 · 만 32세 미만 · 여름 한 학기 (급여 미확인)',
+            'EBRD 인턴: 석사 재학 또는 졸업 12개월 이내 · 유급',
+            'AIIB Graduate: 석사 + 경력 1~2년',
+            'WBG YPP: 석사 + 경력 2~6년 (MBA도 석사로 인정)'
+          )
+        })
       ].map(Y);
 
       const E = TE;
@@ -782,7 +793,7 @@ export class ProjectManager {
         edges,
         notes: [
           { id: 'io_n1', x: 40, y: -900 + Y0, width: 420, height: 330, color: 'yellow', text: '💡 읽는 법\n가로 = 졸업 후 경과 연수. 분기(보라)는 예/아니오에 따라 방향이 바뀌는 지점만.\n시험 합격/재응시는 분기가 아니라 노드 안 메모로.\n유급 · 계약직 포함. 나이 상한은 각 노드에 표기.' },
-          { id: 'io_n2', x: 40, y: 1000 + Y0, width: 420, height: 380, color: 'yellow', text: '🚫 제외한 것\nUN 사무국 인턴: 무급\nUN YPP: 2025 안내서 기준 한국 미참여\nADB · AIIB 인턴: 석사 재학 요건\nWBG YPP · IFC 프로그램: 석사 필요 (MBA 뒤에 배치)\nWBG Pioneers: 졸업 전 최종학년 대상' },
+          { id: 'io_n2', x: 40, y: 1000 + Y0, width: 420, height: 380, color: 'yellow', text: '🚫 제외한 것\nUN 사무국 인턴: 무급\nUN YPP: 2025 안내서 기준 한국 미참여\nWBG Pioneers (학부): 졸업 전 최종학년 대상이라 0년 이후에는 해당 없음\n\n석사가 필요한 프로그램은 제외가 아니라 \'국내 석사\' 노드에 정리' },
           { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 260, color: 'yellow', text: '⚠️ 공고 재확인\nOECD YAP 나이 · 국적 · 급여\nEBRD IPP 학위 요건\nUNV 생활비 금액\nJPO 파견 기간은 2026 공고 기준\n기구 공식 요건은 지원 시점에 다시 확인' }
         ]
       };
