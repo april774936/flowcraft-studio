@@ -625,11 +625,11 @@ export class ProjectManager {
         // ---- 직행 (0년에 지원) ----
         TN('io_jpa', 'action', 'user', 'WB JPA', 1060, -900, '#f97316', {
           period: '0년~ 상시', desc: '2년 계약 · 상시 공고',
-          checklist: TC('학사 이상', '만 28세 이하', '2년 Extended Term · DC / 현지 사무소', '계약 후 WBG YPP 지원 가능')
+          checklist: TC('학사 이상', '만 28세 이하', '계약 2년 (2023 안내서 · 다른 출처는 3년이라 지원 시 재확인) · DC / 현지', '계약 후 WBG YPP 지원 가능')
         }),
         TN('io_jpo', 'action', 'user', 'JPO (외교부)', 1060, -600, '#f97316', {
-          period: '연 1회', desc: '최대 3년 파견 (2026 공고 기준)',
-          checklist: TC('학사 이상', '해당 연도 12/31 기준 만 32세 이하', 'TOEFL 100 / TEPS 430 / IELTS 7 / TOEIC 900', '남성은 병역 필 또는 연말까지 예정')
+          period: '연 1회 · 2026: 5/15~6/26 접수', desc: '1년 + 최대 2년 연장 (총 3년)',
+          checklist: TC('학사 이상', '해당 연도 12/31 기준 만 32세 이하', 'TOEFL 100 / TEPS 430 / IELTS 7 / TOEIC 900', '직위별 요구 경력은 기구 공고 기준 (재무 예: UNFCCC Associate Finance Officer P-2)')
         }),
         TN('io_unv', 'action', 'user', 'UNV 청년봉사단', 1060, -300, '#f97316', {
           period: '연 1회 · 7월 마감', desc: '1년 + 최대 6개월 연장',
@@ -640,8 +640,8 @@ export class ProjectManager {
           checklist: TC('졸업 12개월 이내 또는 석사 재학', '회원국 국적 (한국 포함)', '런던 · UK 비자 필요', '정식 프로그램이 아닌 수시 채용')
         }),
         TN('io_yap', 'action', 'user', 'OECD YAP', 1060, 300, '#f97316', {
-          period: '24개월 · 12/31 마감', desc: '학사 졸업 직후 전용 · 파리',
-          checklist: TC('학사 졸업자만 (석사 · 박사 제외)', '졸업일이 회차별 약 1.5년 창 안 (2024-26 회차: 2023.1~2024.9 졸업)', 'OECD 회원국 국적 (한국 해당) · 나이 상한 없음', '월 약 €3,700 비과세 + 퇴직 수당 약 €23,000 (2024-26 회차 공식 페이지 기준)')
+          period: '24개월 · 12월 중순 마감', desc: '학사 졸업 직후 전용 · 파리',
+          checklist: TC('학사 졸업자만 (석사 · 박사 제외)', '졸업일이 회차별 약 1.5년 창 안 (2026-28 회차: 2025.1.1~2026.9.1 졸업)', 'OECD 회원국 국적 (한국 해당) · 나이 상한 없음', '월 €3,886 비과세 + 퇴직 수당 약 €21,000 (2026-28 회차, 2차 출처)')
         }),
         TN('io_cons', 'action', 'user', '단기 컨설턴트', 1060, 680, '#f97316', {
           period: '수개월 · 상시', desc: 'UN 기구 재무 · 회계 로스터형',
@@ -665,17 +665,17 @@ export class ProjectManager {
         }),
         TN('io_p2', 'action', 'user', 'UN P-2 재무직', 2560, 400, '#3b82f6', {
           period: '상시 공고', desc: 'UNICEF Account Officer P-2 공고 기준',
-          checklist: TC('재무 · 회계 학위 + CPA 우대', '경력 2년', 'IPSAS / IFRS', 'SAP · ERP')
+          checklist: TC('재무 · 회계 학위 + CPA 우대', '경력: UNICEF P-2 공고는 2년 · UN 일반 규칙은 학사+4년 / 석사+2년 (UNDP 기준) → 공고별 확인', 'IPSAS / IFRS', 'SAP · ERP')
         }),
-        TN('io_aiib', 'action', 'user', 'AIIB Graduate Program', 2560, 690, '#3b82f6', {
+        TN('io_aiib', 'action', 'user', 'AIIB Graduate Program', 2560, 730, '#3b82f6', {
           period: '12~2월 지원 · 9월 입사', desc: '2년 로테이션 · 북경',
           checklist: TC('학사 + 경력 2~3년 (석사는 1~2년)', 'Finance · Risk 등 6개 스트림', '나이 상한은 공고에 명시 없음')
         }),
-        TN('io_ipp', 'action', 'user', 'EBRD IPP', 2560, 980, '#3b82f6', {
+        TN('io_ipp', 'action', 'user', 'EBRD IPP', 2560, 1040, '#3b82f6', {
           period: '수시 공고', desc: '24개월 프로그램',
           checklist: TC('최근 학위: 학사 또는 석사', '경력 6~12개월 (근무 · 여행 · 봉사)', '주주국 국적 (비자 면제 제도) · 나이 상한 없음', 'Finance / Risk / Banking 부서 · 급여는 competitive (금액 미공개)')
         }),
-        TN('io_jpo2', 'action', 'user', 'JPO (재도전)', 2560, 1340, '#3b82f6', {
+        TN('io_jpo2', 'action', 'user', 'JPO (재도전)', 2560, 1400, '#3b82f6', {
           period: '연 1회', desc: '직위별 경력 요건 확인',
           checklist: TC('해당 연도 12/31 기준 만 32세 이하', '직위별 요구 경력 충족')
         }),
@@ -794,7 +794,7 @@ export class ProjectManager {
         notes: [
           { id: 'io_n1', x: 40, y: -900 + Y0, width: 420, height: 330, color: 'yellow', text: '💡 읽는 법\n가로 = 졸업 후 경과 연수. 분기(보라)는 예/아니오에 따라 방향이 바뀌는 지점만.\n시험 합격/재응시는 분기가 아니라 노드 안 메모로.\n유급 · 계약직 포함. 나이 상한은 각 노드에 표기.' },
           { id: 'io_n2', x: 40, y: 1000 + Y0, width: 420, height: 380, color: 'yellow', text: '🚫 제외한 것\nUN 사무국 인턴: 무급\nUN YPP: 2025 안내서 기준 한국 미참여\nWBG Pioneers (학부): 졸업 전 최종학년 대상이라 0년 이후에는 해당 없음\n\n석사가 필요한 프로그램은 제외가 아니라 \'국내 석사\' 노드에 정리' },
-          { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 300, color: 'yellow', text: '⚠️ 확인 못 한 것\nJPO 파견 기간: 이전 조사(2026 공고 기준), 이번에 공식 페이지 재확인 실패\nOECD YAP: 공식 페이지는 2024-26 회차 기준. 2026-28 회차 세부는 미확인\nIMF FIP: 석사 나이 상한 불일치 (2023 안내 28세 / 현 페이지 32세)\nUNV 생활비: 2026 기본값은 잠정치\nEBRD IPP · IMF FIP: 급여 금액 미공개' }
+          { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 340, color: 'yellow', text: '⚠️ 확인 못 한 것 · 출처 충돌\nWB JPA: 2023 안내서는 2년 · 상시, 다른 출처는 3년 · 연 1회 → 공식 페이지 재확인 필요\nJPO 파견 기간: 고려대 공지 경유 외교부 공고 기준 (원문 직접 확인 실패)\nOECD YAP 2026-28: 2차 출처 (공식 페이지는 2024-26 회차)\nUN P-2: 공고별 경력 산정이 다름 (CPA 인정 여부)\nIMF FIP: 석사 나이 2023 안내 28세 / 현 페이지 32세\nEBRD IPP · IMF FIP: 급여 금액 미공개'  }
         ]
       };
     }
