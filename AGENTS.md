@@ -16,4 +16,4 @@ Read `HANDOFF.md` first for the hub overview and per-project links.
 - 저장: localStorage(`flowcraft_projects_v2`) + Supabase(`flowcraft_sync`)로 기기간 동기화(`public/sync.js` — Vite는 `public/`만 빌드에 복사하므로 루트로 옮기지 말 것).
 - Vercel에 GitHub 연동 자동배포 — push하면 자동 반영, 별도 배포 명령 불필요.
 - 사용자 지시(2026-09-29): 작업 PR은 검증(빌드/테스트) 통과 후 확인 요청 없이 바로 main에 머지.
-- AI로 만들기: `api/draft.js`(Vercel 서버 함수) → 계획 JSON → `src/ai/DraftBuilder.js`가 노드로 변환. 키는 Vercel 환경변수에만(`ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY`, 선택 `FLOWCRAFT_AI_CODE`) — 저장소·클라이언트 코드에 절대 넣지 말 것. 키가 없으면 로컬 규칙 파서로 동작.
+- AI로 만들기: `api/draft.js`(Vercel 서버 함수) → 계획 JSON → `src/ai/DraftBuilder.js`가 노드로 변환. 키는 Vercel 환경변수에만(`GEMINI_API_KEY` 우선 사용, 없으면 `ANTHROPIC_API_KEY`; 선택 `GEMINI_MODEL`, `FLOWCRAFT_AI_CODE`) — 저장소·클라이언트 코드에 절대 넣지 말 것. 키가 없으면 로컬 규칙 파서로 동작.
