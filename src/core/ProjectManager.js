@@ -607,71 +607,183 @@ export class ProjectManager {
     }
 
     if (key === 'intlorg') {
-      const BR = [{ id: 'pass', label: '합격' }, { id: 'fail', label: '탈락' }];
+      // Timeline board: columns = years since graduation. A node sits in the column of the moment it happens,
+      // so every fork leaves the trunk at its own point in time.
+      const Y0 = 1000; // keeps every y positive
+      const Y = (n) => ({ ...n, y: n.y + Y0 });
+      const YES_NO = (a, b) => [{ id: 'yes', label: a }, { id: 'no', label: b }];
+      const nodes = [
+        // ---- 0년: 졸업 ----
+        TN('io_start', 'start', 'start', '졸업 · USCPA 보유', 40, 560, '#10b981', {
+          period: '0년', progress: 'planned', desc: '여기서 세 갈래로 나뉨',
+          checklist: TC('TOEFL 100 (JPO 요건)', '영문 이력서 · 지원서 준비', '졸업 전 최종학년: WBG Pioneers 유급 인턴 지원 가능')
+        }),
+        TN('io_d0', 'condition', 'condition', '0년: 어느 길로?', 420, 580, '#8b5cf6', {
+          branches: [{ id: 'direct', label: '바로 국제기구' }, { id: 'big4', label: 'Big 4 경력 후' }, { id: 'mast', label: '석사' }]
+        }),
+
+        // ---- 직행 (0년에 지원) ----
+        TN('io_jpa', 'action', 'user', 'WB JPA', 1060, -900, '#f97316', {
+          period: '0년~ 상시', desc: '2년 계약 · 상시 공고',
+          checklist: TC('학사 이상', '만 28세 이하', '2년 Extended Term · DC / 현지 사무소', '계약 후 WBG YPP 지원 가능')
+        }),
+        TN('io_jpo', 'action', 'user', 'JPO (외교부)', 1060, -600, '#f97316', {
+          period: '연 1회', desc: '최대 3년 파견 (2026 공고 기준)',
+          checklist: TC('학사 이상', '해당 연도 12/31 기준 만 32세 이하', 'TOEFL 100 / TEPS 430 / IELTS 7 / TOEIC 900', '남성은 병역 필 또는 연말까지 예정')
+        }),
+        TN('io_unv', 'action', 'user', 'UNV 청년봉사단', 1060, -300, '#f97316', {
+          period: '연 1회 · 7월 마감', desc: '1년 + 최대 6개월 연장',
+          checklist: TC('학사 이상', '만 22~29세', '경력 1개월 이상', '월급이 아닌 봉사 생활비 (금액은 공고 확인)')
+        }),
+        TN('io_eint', 'action', 'user', 'EBRD 인턴', 1060, 0, '#f97316', {
+          period: '수시 · 졸업 12개월 이내', desc: '유급 · 3~6개월 (최대 12)',
+          checklist: TC('졸업 12개월 이내 또는 석사 재학', '회원국 국적 (한국 포함)', '런던 · UK 비자 필요', '정식 프로그램이 아닌 수시 채용')
+        }),
+        TN('io_yap', 'action', 'user', 'OECD YAP', 1060, 300, '#f97316', {
+          period: '2년 프로그램', desc: '학부 졸업 직후 대상',
+          checklist: TC('2년 프로그램 (파리)', '나이 · 국적 · 급여는 공식 페이지 미확인', '→ 공고에서 확인')
+        }),
+        TN('io_cons', 'action', 'user', '단기 컨설턴트', 1060, 600, '#f97316', {
+          period: '수개월 · 상시', desc: 'UN 기구 재무 · 회계 로스터형',
+          checklist: TC('단기 계약 (풀타임 또는 파트타임)', '학위 · 경력 요건은 공고별', '재무 · 회계 전공 우대')
+        }),
+        TN('io_d1', 'condition', 'condition', '1년 시점: 국제기구 확보?', 1560, -160, '#8b5cf6', { branches: YES_NO('확보', '못 함') }),
+        TN('io_b4_late', 'action', 'shield', 'Big 4로 전환 (1년 늦게)', 1560, 420, '#3b82f6', {
+          period: '1년', desc: '직행 미성사 → 경력 트랙. 아래 Big 4 트랙의 시점이 전부 +1년'
+        }),
+        TN('io_inorg_a', 'action', 'user', '국제기구 근무', 2300, -350, '#3b82f6', {
+          period: '1년~', desc: '계약 기간만큼 근무: JPA 2년 · JPO 최대 3년 · UNV 1~1.5년 · YAP 2년 · 인턴/컨설턴트 수개월'
+        }),
+
+        // ---- Big 4 경력 ----
+        TN('io_b4', 'action', 'shield', 'Big 4 입사 (감사 · 리스크)', 760, 900, '#3b82f6', { period: '0년', desc: 'USCPA 보유 상태로 경력 시작' }),
+        TN('io_b4_1', 'action', 'check', 'Big 4 1년 차', 1560, 900, '#3b82f6', {
+          period: '1년', checklist: TC('IFRS · ERP · 내부통제(ICFR) 경험', 'EBRD IPP 경력 요건(6~12개월) 충족 시점')
+        }),
+        TN('io_d2', 'condition', 'condition', '2년 시점: 국제기구 지원?', 2200, 920, '#8b5cf6', {
+          branches: [{ id: 'apply', label: '지원 (경력 2년)' }, { id: 'wait', label: '1년 더 근무' }]
+        }),
+        TN('io_p2', 'action', 'user', 'UN P-2 재무직', 2560, 400, '#3b82f6', {
+          period: '상시 공고', desc: 'UNICEF Account Officer P-2 공고 기준',
+          checklist: TC('재무 · 회계 학위 + CPA 우대', '경력 2년', 'IPSAS / IFRS', 'SAP · ERP')
+        }),
+        TN('io_aiib', 'action', 'user', 'AIIB Graduate Program', 2560, 690, '#3b82f6', {
+          period: '12~2월 지원 · 9월 입사', desc: '2년 로테이션 · 북경',
+          checklist: TC('학사 + 경력 2~3년 (석사는 1~2년)', 'Finance · Risk 등 6개 스트림', '나이 상한은 공고에 명시 없음')
+        }),
+        TN('io_ipp', 'action', 'user', 'EBRD IPP', 2560, 980, '#3b82f6', {
+          period: '수시 공고', desc: '24개월 프로그램',
+          checklist: TC('경력 6~12개월 (근무 · 봉사 포함)', '회원국 국적', 'Finance / Risk / Banking 부서', '학위 요건은 공고 확인')
+        }),
+        TN('io_jpo2', 'action', 'user', 'JPO (재도전)', 2560, 1270, '#3b82f6', {
+          period: '연 1회', desc: '직위별 경력 요건 확인',
+          checklist: TC('해당 연도 12/31 기준 만 32세 이하', '직위별 요구 경력 충족')
+        }),
+        TN('io_r2', 'condition', 'condition', '결과 (3년 시점)', 2960, 900, '#8b5cf6', { branches: [{ id: 'pass', label: '합격' }, { id: 'fail', label: '탈락' }] }),
+        TN('io_b4_3', 'action', 'check', 'Big 4 3년 차', 2200, 1330, '#3b82f6', {
+          period: '2~3년', desc: '경력 3년 충족 (ADB YP 요건)'
+        }),
+        TN('io_d3', 'condition', 'condition', '3년 시점: 국제기구 vs MBA?', 2960, 1350, '#8b5cf6', {
+          branches: [{ id: 'inorg', label: '국제기구 진출' }, { id: 'mba', label: '계속 근무 후 MBA 직행' }]
+        }),
+        TN('io_adb', 'action', 'user', 'ADB Young Professionals', 3340, 1100, '#3b82f6', {
+          period: '9월 지원 (9/30 마감)', desc: '고정 3년 계약',
+          checklist: TC('만 32세 이하', '관련 경력 3년 이상', '마닐라 + 18개월 로테이션', 'ADB 회원국 국적')
+        }),
+        TN('io_retry', 'action', 'user', '재지원 풀', 3340, 1420, '#3b82f6', {
+          period: '3~4년', desc: '경력 3년으로 다시 지원',
+          checklist: TC('UN P-2', 'AIIB Graduate Program', 'EBRD IPP', 'JPO (만 32세 이하)')
+        }),
+        TN('io_r3', 'condition', 'condition', '결과 (4년 시점)', 3700, 1250, '#8b5cf6', { branches: [{ id: 'pass', label: '합격' }, { id: 'fail', label: '탈락' }] }),
+        TN('io_inorg_b', 'action', 'user', '국제기구 근무 (경력 후 진입)', 4200, 880, '#3b82f6', {
+          period: '3~5년~', desc: 'P-2 · AIIB · IPP · ADB · JPO 등 계약 기간만큼'
+        }),
+
+        // ---- 합류: 근무 → MBA → 복귀 ----
+        TN('io_nyr', 'action', 'user', 'n년 근무', 4600, 300, '#3b82f6', {
+          desc: 'MBA 지원 준비. 경력이 WBG YPP의 2~6년 창 안에 들어오도록 기간 설계'
+        }),
+        TN('io_mba', 'action', 'book', 'MBA', 5000, 300, '#3b82f6', {
+          desc: '진학 시점은 경력 종료 시점에 따라 이동. MBA 기간의 YPP 경력 산입 여부는 지원 시점에 공식 FAQ로 확인'
+        }),
+        TN('io_ypp', 'end', 'target', 'WBG YPP · 금융기구 복귀', 5400, 315, '#ec4899', {
+          desc: '석사 + 경력 2~6년 · 회원국 국적 · 매년 9월 지원 (2025: 9/1~9/30) · JPA · 과거 인턴 지원 가능'
+        }),
+
+        // ---- 석사 (직접 구체화) ----
+        TN('io_mast', 'action', 'book', '졸업 후 석사', 760, 1800, '#f59e0b', { period: '0년~', desc: '세부 경로는 직접 구체화. 이 노드에서 이어서 그리기' })
+      ].map(Y);
+
+      const E = TE;
+      const edges = [
+        E('ie1', 'io_start', 'right', 'io_d0', 'left'),
+        E('ie2', 'io_d0', 'branch:direct', 'io_jpa', 'left', '바로 국제기구'),
+        E('ie3', 'io_d0', 'branch:direct', 'io_jpo', 'left'),
+        E('ie4', 'io_d0', 'branch:direct', 'io_unv', 'left'),
+        E('ie5', 'io_d0', 'branch:direct', 'io_eint', 'left'),
+        E('ie6', 'io_d0', 'branch:direct', 'io_yap', 'left'),
+        E('ie7', 'io_d0', 'branch:direct', 'io_cons', 'left'),
+        E('ie8', 'io_d0', 'branch:big4', 'io_b4', 'left', 'Big 4 경력 후'),
+        E('ie9', 'io_d0', 'branch:mast', 'io_mast', 'left', '석사'),
+
+        E('ie10', 'io_jpa', 'right', 'io_d1', 'left'),
+        E('ie11', 'io_jpo', 'right', 'io_d1', 'left'),
+        E('ie12', 'io_unv', 'right', 'io_d1', 'left'),
+        E('ie13', 'io_eint', 'right', 'io_d1', 'left'),
+        E('ie14', 'io_yap', 'right', 'io_d1', 'left'),
+        E('ie15', 'io_cons', 'right', 'io_d1', 'left'),
+        E('ie16', 'io_d1', 'branch:yes', 'io_inorg_a', 'left', '확보'),
+        E('ie17', 'io_d1', 'branch:no', 'io_b4_late', 'left', '못 함'),
+        E('ie18', 'io_b4_late', 'right', 'io_d2', 'top', '이후 구조 동일 (+1년)'),
+
+        E('ie19', 'io_b4', 'right', 'io_b4_1', 'left'),
+        E('ie20', 'io_b4_1', 'right', 'io_d2', 'left'),
+        E('ie21', 'io_d2', 'branch:apply', 'io_p2', 'left', '지원 (경력 2년)'),
+        E('ie22', 'io_d2', 'branch:apply', 'io_aiib', 'left'),
+        E('ie23', 'io_d2', 'branch:apply', 'io_ipp', 'left'),
+        E('ie24', 'io_d2', 'branch:apply', 'io_jpo2', 'left'),
+        E('ie25', 'io_p2', 'right', 'io_r2', 'left'),
+        E('ie26', 'io_aiib', 'right', 'io_r2', 'left'),
+        E('ie27', 'io_ipp', 'right', 'io_r2', 'left'),
+        E('ie28', 'io_jpo2', 'right', 'io_r2', 'left'),
+        E('ie29', 'io_d2', 'branch:wait', 'io_b4_3', 'top', '1년 더 근무'),
+        E('ie30', 'io_r2', 'branch:pass', 'io_inorg_b', 'left', '합격'),
+        E('ie31', 'io_r2', 'branch:fail', 'io_b4_3', 'right', '탈락 → 1년 더 근무'),
+
+        E('ie32', 'io_b4_3', 'right', 'io_d3', 'left'),
+        E('ie33', 'io_d3', 'branch:inorg', 'io_adb', 'left', '국제기구 진출'),
+        E('ie34', 'io_d3', 'branch:inorg', 'io_retry', 'left'),
+        E('ie35', 'io_d3', 'branch:mba', 'io_mba', 'bottom', '계속 근무 후 MBA 직행'),
+        E('ie36', 'io_adb', 'right', 'io_r3', 'left'),
+        E('ie37', 'io_retry', 'right', 'io_r3', 'left'),
+        E('ie38', 'io_r3', 'branch:pass', 'io_inorg_b', 'left', '합격'),
+        E('ie39', 'io_r3', 'branch:fail', 'io_mba', 'bottom', '탈락 → MBA'),
+
+        E('ie40', 'io_inorg_a', 'right', 'io_nyr', 'left'),
+        E('ie41', 'io_inorg_b', 'right', 'io_nyr', 'bottom'),
+        E('ie42', 'io_nyr', 'right', 'io_mba', 'left'),
+        E('ie43', 'io_mba', 'right', 'io_ypp', 'left')
+      ];
+
       return {
         mode: 'flowchart',
-        viewport: { x: 60, y: 60, zoom: 0.6 },
-        nodes: [
-          TN('io_prep', 'start', 'start', '졸업 전 준비', 40, 300, '#10b981', {
-            period: 'Q-2 ~ Q-1', progress: 'active', desc: '영어 점수 · 서류 · 회계 스킬',
-            checklist: TC('TOEFL 100 확보 (JPO 요건)', '영문 이력서 · P11 작성', 'USCPA 라이선스 요건 확인', 'IPSAS 기초 · SAP 사용 경험', 'WBG Pioneers 지원 (학부 최종학년 · 유급, 공식 페이지 재확인)')
-          }),
-          TN('io_grad', 'milestone', 'flag', '졸업 · USCPA 보유', 420, 310, '#f59e0b', { period: 'Q0', progress: 'planned', desc: '트랙 1과 2를 동시에 시작' }),
-
-          TN('io_t1_apply', 'action', 'user', '트랙 1 · 상시 지원', 800, 80, '#f97316', {
-            period: 'Q0', progress: 'planned', desc: '나이 상한: JPA 28 · UNV 29 · JPO 32',
-            checklist: TC('WB JPA 재무 · 회계 공석 (입사일 기준 만 28세 이하)', 'EBRD 유급 인턴 (졸업 12개월 이내 · UK 비자 필요)')
-          }),
-          TN('io_t1_s1', 'action', 'target', '공고 시즌 1', 1180, 80, '#f97316', {
-            period: 'Q1', progress: 'planned', desc: '5~9월 공고 패턴 기준 (졸업 월에 따라 이동)',
-            checklist: TC('JPO 재무 · 회계 · 금융 직위 지원', 'UNV 청년봉사단 지원 (만 29세 이하)', 'GCF형 금융기구 JPO 모니터링')
-          }),
-          TN('io_t1_r1', 'condition', 'condition', '시즌 1 결과', 1560, 100, '#8b5cf6', { period: 'Q2', branches: BR.map(b => ({ ...b })) }),
-          TN('io_t1_s2', 'action', 'target', '공고 시즌 2 재지원', 1940, 220, '#f97316', {
-            period: 'Q5', progress: 'planned', checklist: TC('JPO · JPA · UNV 재지원')
-          }),
-          TN('io_t1_r2', 'condition', 'condition', '시즌 2 결과', 2320, 230, '#8b5cf6', { period: 'Q6', branches: BR.map(b => ({ ...b })) }),
-
-          TN('io_t2_join', 'action', 'shield', 'Big 4 감사 입사', 800, 560, '#3b82f6', {
-            period: 'Q0', progress: 'planned', desc: '감사 / 리스크 어슈어런스로 경력 2년 축적'
-          }),
-          TN('io_t2_exp', 'action', 'check', '1년 차 경험 축적', 1180, 560, '#3b82f6', {
-            period: 'Q4', checklist: TC('IFRS', 'ERP', '내부통제 (ICFR)', 'P-2형 공고의 우대 요건과 대조')
-          }),
-          TN('io_t2_apply', 'action', 'user', 'P-2 재무직 지원', 1560, 570, '#3b82f6', {
-            period: 'Q7', desc: 'UN 계열 P-2 재무직 (CPA + 경력 2년 충족)'
-          }),
-          TN('io_t2_r', 'condition', 'condition', 'P-2 결과', 1940, 575, '#8b5cf6', {
-            period: 'Q8', branches: [{ id: 'pass', label: '합격' }, { id: 'retry', label: '재지원' }]
-          }),
-
-          TN('io_entry', 'milestone', 'flag', '국제기구 진입', 2700, 400, '#f59e0b', { desc: 'JPO · JPA · UNV 또는 P-2 재무직' }),
-          TN('io_work', 'action', 'user', 'n년 근무', 3080, 410, '#3b82f6'),
-          TN('io_mba', 'action', 'book', 'MBA', 3460, 410, '#3b82f6', { desc: '국제기구 n년 + MBA 기간이 YPP 경력 창을 넘기지 않게 설계' }),
-          TN('io_end', 'end', 'target', 'YPP · 금융기구 복귀', 3840, 415, '#ec4899', { desc: 'WBG YPP는 첫 풀타임부터 경력 2~6년 창' })
-        ],
-        edges: [
-          TE('ioe1', 'io_prep', 'right', 'io_grad', 'left'),
-          TE('ioe2', 'io_grad', 'right', 'io_t1_apply', 'left', '트랙 1'),
-          TE('ioe3', 'io_grad', 'right', 'io_t2_join', 'left', '트랙 2'),
-          TE('ioe4', 'io_t1_apply', 'right', 'io_t1_s1', 'left'),
-          TE('ioe5', 'io_t1_s1', 'right', 'io_t1_r1', 'left'),
-          TE('ioe6', 'io_t1_r1', 'branch:pass', 'io_entry', 'left', '합격'),
-          TE('ioe7', 'io_t1_r1', 'branch:fail', 'io_t1_s2', 'left', '탈락'),
-          TE('ioe8', 'io_t1_s2', 'right', 'io_t1_r2', 'left'),
-          TE('ioe9', 'io_t1_r2', 'branch:pass', 'io_entry', 'left', '합격'),
-          TE('ioe10', 'io_t1_r2', 'branch:fail', 'io_t2_apply', 'top', '트랙 2에 집중'),
-          TE('ioe11', 'io_t2_join', 'right', 'io_t2_exp', 'left'),
-          TE('ioe12', 'io_t2_exp', 'right', 'io_t2_apply', 'left'),
-          TE('ioe13', 'io_t2_apply', 'right', 'io_t2_r', 'left'),
-          TE('ioe14', 'io_t2_r', 'branch:pass', 'io_entry', 'left', '합격'),
-          TE('ioe15', 'io_t2_r', 'branch:retry', 'io_t2_apply', 'bottom', '재지원'),
-          TE('ioe16', 'io_entry', 'right', 'io_work', 'left'),
-          TE('ioe17', 'io_work', 'right', 'io_mba', 'left'),
-          TE('ioe18', 'io_mba', 'right', 'io_end', 'left')
-        ],
+        viewport: { x: 40, y: 120, zoom: 0.3 },
+        timeline: {
+          unit: 'custom', start: '', originX: 40, showOnNodes: false,
+          cols: [
+            { id: 'io_c0', label: '0년 (졸업)', w: 1400 },
+            { id: 'io_c1', label: '1년', w: 760 },
+            { id: 'io_c2', label: '2년', w: 760 },
+            { id: 'io_c3', label: '3년', w: 760 },
+            { id: 'io_c4', label: '4년 이후', w: 1800 }
+          ]
+        },
+        nodes,
+        edges,
         notes: [
-          { id: 'io_note', x: 40, y: 20, width: 300, height: 210, color: 'yellow', text: '💡 트랙 1 · 2 병행\n트랙 1이 성사되면 트랙 2는 접어도 됨\nUN 사무국 인턴은 무급이라 제외\nMBA 기간의 YPP 경력 산입 여부는 지원 시점에 공식 FAQ로 확인\n분기는 졸업 분기를 Q0로 둔 상대 분기' }
+          { id: 'io_n1', x: 40, y: -900 + Y0, width: 420, height: 330, color: 'yellow', text: '💡 읽는 법\n가로 = 졸업 후 경과 연수. 분기(보라)는 예/아니오에 따라 방향이 바뀌는 지점만.\n시험 합격/재응시는 분기가 아니라 노드 안 메모로.\n유급 · 계약직 포함. 나이 상한은 각 노드에 표기.' },
+          { id: 'io_n2', x: 40, y: 1000 + Y0, width: 420, height: 380, color: 'yellow', text: '🚫 제외한 것\nUN 사무국 인턴: 무급\nUN YPP: 2025 안내서 기준 한국 미참여\nADB · AIIB 인턴: 석사 재학 요건\nWBG YPP · IFC 프로그램: 석사 필요 (MBA 뒤에 배치)\nWBG Pioneers: 졸업 전 최종학년 대상' },
+          { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 260, color: 'yellow', text: '⚠️ 공고 재확인\nOECD YAP 나이 · 국적 · 급여\nEBRD IPP 학위 요건\nUNV 생활비 금액\nJPO 파견 기간은 2026 공고 기준\n기구 공식 요건은 지원 시점에 다시 확인' }
         ]
       };
     }
