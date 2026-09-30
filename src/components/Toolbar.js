@@ -362,15 +362,19 @@ export class Toolbar {
         try {
           const parsed = JSON.parse(event.target.result);
           if (parsed.nodes && Array.isArray(parsed.nodes)) {
-            this.state.pushHistory();
-            this.state.nodes = parsed.nodes;
-            this.state.edges = parsed.edges || [];
-            this.state.notes = parsed.notes || [];
-            if (parsed.viewport) this.state.viewport = parsed.viewport;
-            this.state.save();
-            this.state.emit('canvas:change');
+            // Opens as a new project (the current board is left as it is), time axis included
+            const name = parsed.name || file.name.replace(/\.json$/i, '') || '불러온 프로젝트';
+            this.state.projectManager.createProject(name, 'blank');
+            this.state.projectManager.updateActiveProjectData({
+              nodes: parsed.nodes,
+              edges: parsed.edges || [],
+              notes: parsed.notes || [],
+              viewport: parsed.viewport || undefined,
+              timeline: parsed.timeline || null
+            });
+            this.state.loadActiveProject();
             soundFx.playSuccess();
-            alert('워크플로우 JSON 파일을 성공적으로 불러왔습니다.');
+            alert(`'${name}' 프로젝트로 불러왔어요.`);
           } else {
             alert('올바른 워크플로우 JSON 파일이 아닙니다.');
           }
