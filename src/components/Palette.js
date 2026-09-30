@@ -159,6 +159,7 @@ export class Palette {
   renderTemplates() {
     const templates = [
       { key: 'career', name: '🧭 커리어 로드맵', badge: '로드맵', desc: '현재 위치 → 역량 진단 → 단기 목표 → 경로 선택(3갈래) → 중기 · 장기 목표. 기간 · 진행 상태 포함' },
+      { key: 'intlorg', name: '🌐 국제기구 진출 로드맵', badge: '로드맵', desc: '준비 → 졸업 → 트랙 1(JPO · JPA · UNV) / 트랙 2(Big 4 → P-2) → 진입 → MBA. 분기 · 나이 상한 포함' },
       { key: 'study', name: '📚 공부 흐름도', badge: '공부', desc: '자료 → 핵심 개념 → 원리 → 예제 → 이해도 점검(3갈래) → 응용 · 복습 루프' },
       { key: 'exam', name: '📝 시험 준비 계획', badge: '공부', desc: 'D-120부터 범위 파악 · 1회독 · 기출 · 모의고사 → 점수별 대응 → 시험' },
       { key: 'realestate', name: '🏠 부동산 매매 절차', badge: '체크리스트', desc: '매물 확인 → 결과별 3갈래 분기 → 계약서 작성 → 잔금 · 등기' },

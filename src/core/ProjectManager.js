@@ -606,6 +606,76 @@ export class ProjectManager {
       };
     }
 
+    if (key === 'intlorg') {
+      const BR = [{ id: 'pass', label: '합격' }, { id: 'fail', label: '탈락' }];
+      return {
+        mode: 'flowchart',
+        viewport: { x: 60, y: 60, zoom: 0.6 },
+        nodes: [
+          TN('io_prep', 'start', 'start', '졸업 전 준비', 40, 300, '#10b981', {
+            period: 'Q-2 ~ Q-1', progress: 'active', desc: '영어 점수 · 서류 · 회계 스킬',
+            checklist: TC('TOEFL 100 확보 (JPO 요건)', '영문 이력서 · P11 작성', 'USCPA 라이선스 요건 확인', 'IPSAS 기초 · SAP 사용 경험', 'WBG Pioneers 지원 (학부 최종학년 · 유급, 공식 페이지 재확인)')
+          }),
+          TN('io_grad', 'milestone', 'flag', '졸업 · USCPA 보유', 420, 310, '#f59e0b', { period: 'Q0', progress: 'planned', desc: '트랙 1과 2를 동시에 시작' }),
+
+          TN('io_t1_apply', 'action', 'user', '트랙 1 · 상시 지원', 800, 80, '#f97316', {
+            period: 'Q0', progress: 'planned', desc: '나이 상한: JPA 28 · UNV 29 · JPO 32',
+            checklist: TC('WB JPA 재무 · 회계 공석 (입사일 기준 만 28세 이하)', 'EBRD 유급 인턴 (졸업 12개월 이내 · UK 비자 필요)')
+          }),
+          TN('io_t1_s1', 'action', 'target', '공고 시즌 1', 1180, 80, '#f97316', {
+            period: 'Q1', progress: 'planned', desc: '5~9월 공고 패턴 기준 (졸업 월에 따라 이동)',
+            checklist: TC('JPO 재무 · 회계 · 금융 직위 지원', 'UNV 청년봉사단 지원 (만 29세 이하)', 'GCF형 금융기구 JPO 모니터링')
+          }),
+          TN('io_t1_r1', 'condition', 'condition', '시즌 1 결과', 1560, 100, '#8b5cf6', { period: 'Q2', branches: BR.map(b => ({ ...b })) }),
+          TN('io_t1_s2', 'action', 'target', '공고 시즌 2 재지원', 1940, 220, '#f97316', {
+            period: 'Q5', progress: 'planned', checklist: TC('JPO · JPA · UNV 재지원')
+          }),
+          TN('io_t1_r2', 'condition', 'condition', '시즌 2 결과', 2320, 230, '#8b5cf6', { period: 'Q6', branches: BR.map(b => ({ ...b })) }),
+
+          TN('io_t2_join', 'action', 'shield', 'Big 4 감사 입사', 800, 560, '#3b82f6', {
+            period: 'Q0', progress: 'planned', desc: '감사 / 리스크 어슈어런스로 경력 2년 축적'
+          }),
+          TN('io_t2_exp', 'action', 'check', '1년 차 경험 축적', 1180, 560, '#3b82f6', {
+            period: 'Q4', checklist: TC('IFRS', 'ERP', '내부통제 (ICFR)', 'P-2형 공고의 우대 요건과 대조')
+          }),
+          TN('io_t2_apply', 'action', 'user', 'P-2 재무직 지원', 1560, 570, '#3b82f6', {
+            period: 'Q7', desc: 'UN 계열 P-2 재무직 (CPA + 경력 2년 충족)'
+          }),
+          TN('io_t2_r', 'condition', 'condition', 'P-2 결과', 1940, 575, '#8b5cf6', {
+            period: 'Q8', branches: [{ id: 'pass', label: '합격' }, { id: 'retry', label: '재지원' }]
+          }),
+
+          TN('io_entry', 'milestone', 'flag', '국제기구 진입', 2700, 400, '#f59e0b', { desc: 'JPO · JPA · UNV 또는 P-2 재무직' }),
+          TN('io_work', 'action', 'user', 'n년 근무', 3080, 410, '#3b82f6'),
+          TN('io_mba', 'action', 'book', 'MBA', 3460, 410, '#3b82f6', { desc: '국제기구 n년 + MBA 기간이 YPP 경력 창을 넘기지 않게 설계' }),
+          TN('io_end', 'end', 'target', 'YPP · 금융기구 복귀', 3840, 415, '#ec4899', { desc: 'WBG YPP는 첫 풀타임부터 경력 2~6년 창' })
+        ],
+        edges: [
+          TE('ioe1', 'io_prep', 'right', 'io_grad', 'left'),
+          TE('ioe2', 'io_grad', 'right', 'io_t1_apply', 'left', '트랙 1'),
+          TE('ioe3', 'io_grad', 'right', 'io_t2_join', 'left', '트랙 2'),
+          TE('ioe4', 'io_t1_apply', 'right', 'io_t1_s1', 'left'),
+          TE('ioe5', 'io_t1_s1', 'right', 'io_t1_r1', 'left'),
+          TE('ioe6', 'io_t1_r1', 'branch:pass', 'io_entry', 'left', '합격'),
+          TE('ioe7', 'io_t1_r1', 'branch:fail', 'io_t1_s2', 'left', '탈락'),
+          TE('ioe8', 'io_t1_s2', 'right', 'io_t1_r2', 'left'),
+          TE('ioe9', 'io_t1_r2', 'branch:pass', 'io_entry', 'left', '합격'),
+          TE('ioe10', 'io_t1_r2', 'branch:fail', 'io_t2_apply', 'top', '트랙 2에 집중'),
+          TE('ioe11', 'io_t2_join', 'right', 'io_t2_exp', 'left'),
+          TE('ioe12', 'io_t2_exp', 'right', 'io_t2_apply', 'left'),
+          TE('ioe13', 'io_t2_apply', 'right', 'io_t2_r', 'left'),
+          TE('ioe14', 'io_t2_r', 'branch:pass', 'io_entry', 'left', '합격'),
+          TE('ioe15', 'io_t2_r', 'branch:retry', 'io_t2_apply', 'bottom', '재지원'),
+          TE('ioe16', 'io_entry', 'right', 'io_work', 'left'),
+          TE('ioe17', 'io_work', 'right', 'io_mba', 'left'),
+          TE('ioe18', 'io_mba', 'right', 'io_end', 'left')
+        ],
+        notes: [
+          { id: 'io_note', x: 40, y: 20, width: 300, height: 210, color: 'yellow', text: '💡 트랙 1 · 2 병행\n트랙 1이 성사되면 트랙 2는 접어도 됨\nUN 사무국 인턴은 무급이라 제외\nMBA 기간의 YPP 경력 산입 여부는 지원 시점에 공식 FAQ로 확인\n분기는 졸업 분기를 Q0로 둔 상대 분기' }
+        ]
+      };
+    }
+
     return null;
   }
 }
