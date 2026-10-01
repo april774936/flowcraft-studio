@@ -623,9 +623,9 @@ export class ProjectManager {
         }),
 
         // ---- 직행 (0년에 지원) ----
-        TN('io_jpa', 'action', 'user', 'WB JPA', 1060, -900, '#f97316', {
-          period: '0년~ 상시', desc: '2년 계약 · 상시 공고',
-          checklist: TC('학사 이상', '만 28세 이하', '2년 계약 (2023 공식 안내서) · DC / 현지 사무소', '계약 후 WBG YPP 지원 가능')
+        TN('io_jpa', 'action', 'user', '★ WB JPA (메인)', 1060, -1000, '#eab308', {
+          period: '0년~ 상시 · 만 28세 이하(첫 근무일)', desc: '직행의 메인 · 2년 후 MBA로 연결',
+          checklist: TC('학사 이상 (경제 · 국제관계 · 경영 · 사회과학 · 법 우대) · 영어 능통', '2년 비갱신 계약(ETC) · 종료 후 2년간 WBG 재고용 금지 (WB 공고 TOR)', '정규직 진입 경로가 아님 (공식 문구) · YPP 지원은 가능', '급여 · 직급은 공식 자료에서 확인 못 함')
         }),
         TN('io_jpo', 'action', 'user', 'JPO (외교부)', 1060, -600, '#f97316', {
           period: '연 1회 · 2026: 5/15~6/26 접수', desc: '1년 + 최대 2년 연장 (총 3년)',
@@ -652,7 +652,7 @@ export class ProjectManager {
           period: '1년', desc: '직행 미성사 → 경력 트랙. 아래 Big 4 트랙의 시점이 전부 +1년'
         }),
         TN('io_inorg_a', 'action', 'user', '국제기구 근무', 2300, -350, '#3b82f6', {
-          period: '1년~', desc: '계약 기간만큼 근무: JPA 2년 · JPO 최대 3년 · UNV 1~1.5년 · YAP 2년 · 인턴/컨설턴트 수개월'
+          period: '1년~', desc: '계약 기간만큼 근무: JPA 2년(비갱신) · JPO 최대 3년 · UNV 1~1.5년 · YAP 2년 · 인턴/컨설턴트 수개월'
         }),
 
         // ---- Big 4 경력 ----
@@ -701,7 +701,7 @@ export class ProjectManager {
 
         // ---- 합류: 근무 → MBA → 복귀 ----
         TN('io_nyr', 'action', 'user', 'n년 근무', 4600, 300, '#3b82f6', {
-          desc: 'MBA 지원 준비. 경력이 WBG YPP의 2~6년 창 안에 들어오도록 기간 설계'
+          desc: 'MBA 지원 준비. JPA 경로면 WBG 재고용 금지 2년이 MBA 2년과 겹침. 경력이 WBG YPP의 2~6년 창 안에 들어오도록 기간 설계'
         }),
         TN('io_mba', 'action', 'book', 'MBA', 5000, 300, '#3b82f6', {
           desc: '진학 시점은 경력 종료 시점에 따라 이동. MBA 기간의 YPP 경력 산입 여부는 지원 시점에 공식 FAQ로 확인'
@@ -795,7 +795,7 @@ export class ProjectManager {
         notes: [
           { id: 'io_n1', x: 40, y: -900 + Y0, width: 420, height: 330, color: 'yellow', text: '💡 읽는 법\n가로 = 졸업 후 경과 연수. 분기(보라)는 예/아니오에 따라 방향이 바뀌는 지점만.\n시험 합격/재응시는 분기가 아니라 노드 안 메모로.\n유급 · 계약직 포함. 나이 상한은 각 노드에 표기.' },
           { id: 'io_n2', x: 40, y: 1000 + Y0, width: 420, height: 420, color: 'yellow', text: '🚫 제외한 것\nUN 사무국 인턴: 무급\nUN YPP: 2025 안내서 기준 한국 미참여\nWBG Pioneers (학부): 졸업 전 최종학년 대상이라 0년 이후에는 해당 없음\nAfDB YPP: 석사 + 경력 3년 + 아프리카·개도국 현장 경력 요건\n\n석사가 필요한 프로그램은 제외가 아니라 \'국내 석사\' 노드에 정리'  },
-          { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 340, color: 'yellow', text: '⚠️ 확인 못 한 것 · 출처 충돌\nJPO 파견 기간: 고려대 공지 경유 외교부 공고 기준 (원문 직접 확인 실패)\nOECD YAP 2026-28: 2차 출처 (공식 페이지는 2024-26 회차)\nUN P-2: 공고별 경력 산정이 다름 (CPA 인정 여부)\nIMF FIP: 석사 나이 2023 안내 28세 / 현 페이지 32세\nWB JPA: 2023 안내서 기준 (현재 공식 페이지는 못 열어 봄)\nIDB YPP · GGGI 인턴: 공식 페이지에서 조건을 못 찾아 차트 미반영\nEBRD IPP · IMF FIP: 급여 금액 미공개'  }
+          { id: 'io_n3', x: 1060, y: 1800 + Y0, width: 520, height: 400, color: 'yellow', text: '⚠️ 확인 못 한 것 · 출처 충돌\nJPO 파견 기간: 고려대 공지 경유 외교부 공고 기준 (원문 직접 확인 실패)\nOECD YAP 2026-28: 2차 출처 (공식 페이지는 2024-26 회차)\nUN P-2: 공고별 경력 산정이 다름 (CPA 인정 여부)\nIMF FIP: 석사 나이 2023 안내 28세 / 현 페이지 32세\nWB JPA: 2022 국가사무소 공고 TOR 기준 (2년 · 비갱신 · 재고용 금지 2년 · 만 28세). 급여 · 직급(GA) · 인재풀 방식 · 컨설턴트 포함 여부는 공식 자료에서 못 찾음\nJPA 종료자의 YPP 지원 시기와 재고용 금지의 상호작용: 미확인\nIDB YPP · GGGI 인턴: 공식 페이지에서 조건을 못 찾아 차트 미반영\nEBRD IPP · IMF FIP: 급여 금액 미공개'  }
         ]
       };
     }
