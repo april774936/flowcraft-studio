@@ -23,12 +23,16 @@
   // 동기화 결과 반영 후 새로고침 무한루프 방지용
   const RELOAD_GUARD_KEY = 'FLOWCRAFT_SYNC_RELOADED_AT';
 
+  const DEFAULT_SYNC_CODE = 'mj-WDK4JHup1kfdRUfr';
+
   const configured = !SUPABASE_URL.includes('YOUR-PROJECT');
 
   const origSetItem = localStorage.setItem.bind(localStorage);
 
   function getSyncCode() {
-    return localStorage.getItem(CODE_KEY) || '';
+    const saved = localStorage.getItem(CODE_KEY);
+    if (saved === 'off') return '';
+    return (saved && saved.trim()) || DEFAULT_SYNC_CODE;
   }
   function setSyncCode(code) {
     origSetItem(CODE_KEY, code);
@@ -318,7 +322,7 @@
     const ico = document.createElement('span'); ico.textContent = text.slice(0, sp);
     const txt = document.createElement('span'); txt.className = 'sb-txt'; txt.textContent = text.slice(sp);
     el.replaceChildren(ico, txt);
-    el.title = text;
+    el.title = `동기화 코드: ${code || '없음'} (클릭하여 기기 간 동기화 설정/코드 확인)`;
   }
 
   function onBadgeClick() {
@@ -332,10 +336,14 @@
 
   function openSetupPrompt() {
     const current = getSyncCode();
+    const isCustom = localStorage.getItem(CODE_KEY) && localStorage.getItem(CODE_KEY) !== DEFAULT_SYNC_CODE;
     const input = prompt(
-      '기기 간 동기화 코드를 입력하세요.\n' +
-        '처음이면 아무 문자열이나 새로 정해서 사용하는 모든 기기(PC/폰/태블릿)에 똑같이 입력하세요.\n' +
-        '예: minjoon-flowcraft-2026',
+      `[FlowCraft Studio 기기 간 동기화 설정]\n\n` +
+        `현재 동기화 코드: ${current || '(동기화 꺼짐)'}${isCustom ? ' (사용자 정의 코드)' : ' (기본 코드)'}\n\n` +
+        `• 다른 기기(스마트폰, 태블릿, 다른 PC)에서 접속할 때도 이 코드를 입력하거나,\n` +
+        `  사이트 주소 뒤에 '?sync=${current || DEFAULT_SYNC_CODE}'를 붙여 접속하면 플로우차트가 자동으로 동기화됩니다.\n\n` +
+        `• 동기화 코드를 변경하려면 새 코드를 입력하세요.\n` +
+        `• 동기화를 끄려면 'off'를 입력하세요:`,
       current || ''
     );
     if (input === null) return;

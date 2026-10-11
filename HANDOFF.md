@@ -1,7 +1,7 @@
 # antigravity 허브 — 프로젝트 전체 개요
 
 허브 위치: `/Users/mac/Documents/antigravity` (Mac Mini)
-마지막 갱신: 2026-09-27 (Claude)
+마지막 갱신: 2026-10-12 (Antigravity)
 
 ## 5개 프로젝트 & 외부 접속 링크
 
